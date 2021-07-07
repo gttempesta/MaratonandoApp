@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace MaratonandoApp.Server.Data.Migrations
+namespace MaratonandoApp.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210701020619_FilmsLibrary2")]
-    partial class FilmsLibrary2
+    [Migration("20210706173537_CreatingBase")]
+    partial class CreatingBase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,21 +20,6 @@ namespace MaratonandoApp.Server.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.7")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("FilmFilmLibrary", b =>
-                {
-                    b.Property<int>("FilmsFilmId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FilmsLibraryFilmLibraryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FilmsFilmId", "FilmsLibraryFilmLibraryId");
-
-                    b.HasIndex("FilmsLibraryFilmLibraryId");
-
-                    b.ToTable("FilmFilmLibrary");
-                });
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
                 {
@@ -204,7 +189,7 @@ namespace MaratonandoApp.Server.Data.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("MaratonandoApp.Server.Models.Film", b =>
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.Film", b =>
                 {
                     b.Property<int>("FilmId")
                         .ValueGeneratedOnAdd()
@@ -246,7 +231,33 @@ namespace MaratonandoApp.Server.Data.Migrations
                     b.ToTable("Films");
                 });
 
-            modelBuilder.Entity("MaratonandoApp.Server.Models.FilmLibrary", b =>
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmComment", b =>
+                {
+                    b.Property<int>("FilmCommentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ComentarioMsg")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("FilmId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FilmCommentId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("FilmId");
+
+                    b.ToTable("FilmComments");
+                });
+
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmLibrary", b =>
                 {
                     b.Property<int>("FilmLibraryId")
                         .ValueGeneratedOnAdd()
@@ -264,6 +275,33 @@ namespace MaratonandoApp.Server.Data.Migrations
                         .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("FilmLibraries");
+                });
+
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmsOnLibrary", b =>
+                {
+                    b.Property<int>("FilmLibraryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FilmId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataAssistido")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("FlAssistido")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("FlFavorito")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NotaFilme")
+                        .HasColumnType("int");
+
+                    b.HasKey("FilmLibraryId", "FilmId");
+
+                    b.HasIndex("FilmId");
+
+                    b.ToTable("FilmsOnLibraries");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -401,28 +439,47 @@ namespace MaratonandoApp.Server.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("FilmFilmLibrary", b =>
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmComment", b =>
                 {
-                    b.HasOne("MaratonandoApp.Server.Models.Film", null)
-                        .WithMany()
-                        .HasForeignKey("FilmsFilmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("MaratonandoApp.Server.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("FilmComments")
+                        .HasForeignKey("ApplicationUserId");
 
-                    b.HasOne("MaratonandoApp.Server.Models.FilmLibrary", null)
-                        .WithMany()
-                        .HasForeignKey("FilmsLibraryFilmLibraryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("MaratonandoApp.Server.Models.Film.Film", "Film")
+                        .WithMany("FilmComments")
+                        .HasForeignKey("FilmId");
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Film");
                 });
 
-            modelBuilder.Entity("MaratonandoApp.Server.Models.FilmLibrary", b =>
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmLibrary", b =>
                 {
                     b.HasOne("MaratonandoApp.Server.Models.ApplicationUser", "ApplicationUser")
                         .WithOne("FilmLibrary")
-                        .HasForeignKey("MaratonandoApp.Server.Models.FilmLibrary", "UserId");
+                        .HasForeignKey("MaratonandoApp.Server.Models.Film.FilmLibrary", "UserId");
 
                     b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmsOnLibrary", b =>
+                {
+                    b.HasOne("MaratonandoApp.Server.Models.Film.Film", "Film")
+                        .WithMany("FilmOnLibraries")
+                        .HasForeignKey("FilmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MaratonandoApp.Server.Models.Film.FilmLibrary", "FilmLibrary")
+                        .WithMany("filmsOnLibraries")
+                        .HasForeignKey("FilmLibraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Film");
+
+                    b.Navigation("FilmLibrary");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -478,7 +535,21 @@ namespace MaratonandoApp.Server.Data.Migrations
 
             modelBuilder.Entity("MaratonandoApp.Server.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("FilmComments");
+
                     b.Navigation("FilmLibrary");
+                });
+
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.Film", b =>
+                {
+                    b.Navigation("FilmComments");
+
+                    b.Navigation("FilmOnLibraries");
+                });
+
+            modelBuilder.Entity("MaratonandoApp.Server.Models.Film.FilmLibrary", b =>
+                {
+                    b.Navigation("filmsOnLibraries");
                 });
 #pragma warning restore 612, 618
         }

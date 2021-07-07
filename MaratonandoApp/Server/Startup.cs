@@ -1,5 +1,5 @@
 using MaratonandoApp.Server.Data;
-using MaratonandoApp.Server.Models;
+using MaratonandoApp.Shared.Models.User;
 using MaratonandoApp.Server.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;

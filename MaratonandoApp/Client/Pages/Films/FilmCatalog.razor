@@ -1,0 +1,45 @@
+﻿@page "/filmcatalog"
+@inject HttpClient http
+
+<h3>Catalogo de Filmes</h3>
+
+@if (films == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (films.Length == 0)
+{
+    <p><em>Não existem filmes cadatrados...</em></p>
+}
+else
+{ 
+<div class="card-group">
+    @foreach (var film in films)
+    {
+    <div style="width:20px">
+        <div class="card text-center">
+            <img class="card-img-top" src="@film.Poster" alt="Card image cap">
+            <div class="card-body">
+                <h5 class="card-title">@film.Titulo</h5>
+                <a href="#" class="btn btn-primary">Ver mais</a>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+    }
+
+    @code {
+        Film[] films { get; set; }
+
+protected override async Task OnInitializedAsync()
+    {
+        await CarregarFilmes();
+    }
+
+    async Task CarregarFilmes()
+    {
+        films = await http.GetFromJsonAsync<Film[]>("/api/films");
+
+    }
+    }

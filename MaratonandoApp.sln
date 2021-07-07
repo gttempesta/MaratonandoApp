@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaratonandoApp.Server", "MaratonandoApp\Server\MaratonandoApp.Server.csproj", "{05D1910A-B4BF-459E-A905-B7DC2C6CAC29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaratonandoApp.Server", "MaratonandoApp\Server\MaratonandoApp.Server.csproj", "{05D1910A-B4BF-459E-A905-B7DC2C6CAC29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaratonandoApp.Client", "MaratonandoApp\Client\MaratonandoApp.Client.csproj", "{0A075637-0CE7-4D99-9C52-9F016525127E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaratonandoApp.Client", "MaratonandoApp\Client\MaratonandoApp.Client.csproj", "{0A075637-0CE7-4D99-9C52-9F016525127E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaratonandoApp.Shared", "MaratonandoApp\Shared\MaratonandoApp.Shared.csproj", "{67C6E601-9649-4ECE-BA8B-6E256F00F6D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaratonandoApp.Shared", "MaratonandoApp\Shared\MaratonandoApp.Shared.csproj", "{67C6E601-9649-4ECE-BA8B-6E256F00F6D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

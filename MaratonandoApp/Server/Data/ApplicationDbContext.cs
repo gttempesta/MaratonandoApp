@@ -1,5 +1,4 @@
 ﻿using IdentityServer4.EntityFramework.Options;
-using MaratonandoApp.Server.Models;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -7,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MaratonandoApp.Shared.Models.Film;
+using MaratonandoApp.Shared.Models.User;
 
 namespace MaratonandoApp.Server.Data
 {
@@ -20,6 +21,8 @@ namespace MaratonandoApp.Server.Data
 
         public DbSet<FilmLibrary> FilmLibraries { get; set; }
         public DbSet<Film> Films { get; set; }
+        public DbSet<FilmsOnLibrary> FilmsOnLibraries { get; set; } 
+        public DbSet<FilmComment> FilmComments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,6 +32,26 @@ namespace MaratonandoApp.Server.Data
                 .HasOne(a => a.FilmLibrary)
                 .WithOne(b => b.ApplicationUser)
                 .HasForeignKey<FilmLibrary>(b => b.UserId);
+
+            modelBuilder.Entity<Film>()
+                .HasMany(c => c.FilmComments)
+                .WithOne(e => e.Film);
+
+            modelBuilder.Entity<FilmComment>()
+                .HasOne(a => a.ApplicationUser)
+                .WithMany(b => b.FilmComments);
+
+            modelBuilder.Entity<FilmsOnLibrary>().HasKey(fol => new { fol.FilmLibraryId, fol.FilmId });
+
+            modelBuilder.Entity<FilmsOnLibrary>()
+                .HasOne<Film>(fol => fol.Film)
+                .WithMany(f => f.FilmOnLibraries)
+                .HasForeignKey(fol => fol.FilmId);
+
+            modelBuilder.Entity<FilmsOnLibrary>()
+                .HasOne<FilmLibrary>(fol => fol.FilmLibrary)
+                .WithMany(f => f.filmsOnLibraries)
+                .HasForeignKey(fol => fol.FilmLibraryId);
         }
     }
 }

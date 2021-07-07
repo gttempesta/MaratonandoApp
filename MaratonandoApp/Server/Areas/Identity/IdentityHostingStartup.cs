@@ -1,6 +1,6 @@
 ﻿using System;
 using MaratonandoApp.Server.Data;
-using MaratonandoApp.Server.Models;
+using MaratonandoApp.Shared.Models.User;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaratonandoApp.Server.Models
+namespace MaratonandoApp.Shared.Models.Film
 {
     public class Film
     {
@@ -33,7 +33,8 @@ namespace MaratonandoApp.Server.Models
         [MaxLength(30)]
         public string Pais { get; set; }
 
-        public ICollection<FilmLibrary> FilmsLibrary { get; set; }
+        public ICollection<FilmsOnLibrary> FilmOnLibraries { get; set; }
 
+        public ICollection<FilmComment> FilmComments { get; set; }
     }
 }

@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-using System;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace MaratonandoApp.Server.Data.Migrations
+namespace MaratonandoApp.Server.Migrations
 {
-    public partial class CreateIdentitySchema : Migration
+    public partial class CreatingBase : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -63,6 +63,26 @@ namespace MaratonandoApp.Server.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DeviceCodes", x => x.UserCode);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Films",
+                columns: table => new
+                {
+                    FilmId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Diretor = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DataEstreia = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Sinopse = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Genero = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    Poster = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Duracao = table.Column<int>(type: "int", nullable: false),
+                    Pais = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Films", x => x.FilmId);
                 });
 
             migrationBuilder.CreateTable(
@@ -191,6 +211,80 @@ namespace MaratonandoApp.Server.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "FilmLibraries",
+                columns: table => new
+                {
+                    FilmLibraryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FilmLibraries", x => x.FilmLibraryId);
+                    table.ForeignKey(
+                        name: "FK_FilmLibraries_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FilmComments",
+                columns: table => new
+                {
+                    FilmCommentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ComentarioMsg = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    FilmId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FilmComments", x => x.FilmCommentId);
+                    table.ForeignKey(
+                        name: "FK_FilmComments_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FilmComments_Films_FilmId",
+                        column: x => x.FilmId,
+                        principalTable: "Films",
+                        principalColumn: "FilmId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FilmsOnLibraries",
+                columns: table => new
+                {
+                    FilmLibraryId = table.Column<int>(type: "int", nullable: false),
+                    FilmId = table.Column<int>(type: "int", nullable: false),
+                    FlAssistido = table.Column<bool>(type: "bit", nullable: false),
+                    DataAssistido = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NotaFilme = table.Column<int>(type: "int", nullable: false),
+                    FlFavorito = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FilmsOnLibraries", x => new { x.FilmLibraryId, x.FilmId });
+                    table.ForeignKey(
+                        name: "FK_FilmsOnLibraries_FilmLibraries_FilmLibraryId",
+                        column: x => x.FilmLibraryId,
+                        principalTable: "FilmLibraries",
+                        principalColumn: "FilmLibraryId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FilmsOnLibraries_Films_FilmId",
+                        column: x => x.FilmId,
+                        principalTable: "Films",
+                        principalColumn: "FilmId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -242,6 +336,28 @@ namespace MaratonandoApp.Server.Data.Migrations
                 column: "Expiration");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FilmComments_ApplicationUserId",
+                table: "FilmComments",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FilmComments_FilmId",
+                table: "FilmComments",
+                column: "FilmId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FilmLibraries_UserId",
+                table: "FilmLibraries",
+                column: "UserId",
+                unique: true,
+                filter: "[UserId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FilmsOnLibraries_FilmId",
+                table: "FilmsOnLibraries",
+                column: "FilmId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PersistedGrants_Expiration",
                 table: "PersistedGrants",
                 column: "Expiration");
@@ -278,10 +394,22 @@ namespace MaratonandoApp.Server.Data.Migrations
                 name: "DeviceCodes");
 
             migrationBuilder.DropTable(
+                name: "FilmComments");
+
+            migrationBuilder.DropTable(
+                name: "FilmsOnLibraries");
+
+            migrationBuilder.DropTable(
                 name: "PersistedGrants");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "FilmLibraries");
+
+            migrationBuilder.DropTable(
+                name: "Films");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
