@@ -13,26 +13,47 @@ else if (films.Length == 0)
 }
 else
 { 
-<div class="card-group">
-    @foreach (var film in films)
-    {
-    <div style="width:20px">
-        <div class="card text-center">
-            <img class="card-img-top" src="@film.Poster" alt="Card image cap">
-            <div class="card-body">
-                <h5 class="card-title">@film.Titulo</h5>
-                <a href="#" class="btn btn-primary">Ver mais</a>
+<div class="container">
+    <div class="row">
+        <div class="form-inline">
+            <label class="sr-only" for="inlineFormInputGroupUsername2">Username</label>
+            <div class="input-group mb-2 mr-sm-2">
+                <input type="text" class="form-control" id="inlineFormInputGroupUsername2" placeholder="Username">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">Pesquisar</div>
+                </div>
             </div>
         </div>
     </div>
-    }
+    <div class="row mb-5">
+        <div class="form-inline">
+            <label class="sr-only" for="inlineFormInputGroupUsername2">Username</label>
+            <div class="input-group mb-2 mr-sm-2">
+                <input type="text" class="form-control" id="inlineFormInputGroupUsername2" placeholder="Username">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">Pesquisar</div>
+                </div>
+            </div>
+        </div>
+        @foreach (var film in films)
+        {
+            <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
+                <div class="card h-100">
+                    <a href="#" class="card-link">
+                        <img class="card-img" src="@film.Poster" alt="Poster do filme" />
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
 </div>
     }
 
-    @code {
-        Film[] films { get; set; }
-
-protected override async Task OnInitializedAsync()
+@code 
+{
+    Film[] films { get; set; }
+    
+    protected override async Task OnInitializedAsync()
     {
         await CarregarFilmes();
     }
@@ -42,4 +63,4 @@ protected override async Task OnInitializedAsync()
         films = await http.GetFromJsonAsync<Film[]>("/api/films");
 
     }
-    }
+}
