@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MaratonandoApp.Server.Data;
 using MaratonandoApp.Shared.Models.Film;
+using MaratonandoApp.Shared.Resources;
+using MaratonandoApp.Server.Utils;
 
 namespace MaratonandoApp.Server.Controllers
 {
@@ -23,9 +25,18 @@ namespace MaratonandoApp.Server.Controllers
 
         // GET: api/Films
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Film>>> GetFilms()
+        public async Task<ActionResult<List<Film>>> GetFilms([FromQuery] Paginacao paginacao, [FromQuery] string titulo)
         {
-            return await _context.Films.ToListAsync();
+            var queryable = _context.Films.AsQueryable();
+
+            if (!string.IsNullOrEmpty(titulo))
+            {
+                queryable = queryable.Where(x => x.Titulo.Contains(titulo));
+
+            }
+            await HttpContext.InserirParametroEmPageResponse(queryable, paginacao.QuantidadePorPagina);
+            return await queryable.Paginar(paginacao).ToListAsync();
+            
         }
 
         // GET: api/Films/5

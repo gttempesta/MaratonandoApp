@@ -1,40 +1,31 @@
 ﻿@page "/filmcatalog"
 @inject HttpClient http
+@using System.Text.Json
 
-<h3>Catalogo de Filmes</h3>
+<h3 class="mb-5">Catalogo de Filmes</h3>
 
 @if (films == null)
 {
     <p><em>Carregando...</em></p>
 }
-else if (films.Length == 0)
+else if (films.Count == 0)
 {
     <p><em>Não existem filmes cadatrados...</em></p>
 }
 else
-{ 
+{
+    
 <div class="container">
     <div class="row">
-        <div class="form-inline">
-            <label class="sr-only" for="inlineFormInputGroupUsername2">Username</label>
-            <div class="input-group mb-2 mr-sm-2">
-                <input type="text" class="form-control" id="inlineFormInputGroupUsername2" placeholder="Username">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Pesquisar</div>
-                </div>
+        <div class="input-group mb-3 col-8" style="margin: 0 auto">
+            <input type="text" @bind="tituloFilme" class="form-control" placeholder="Digite o filme..." aria-label="Recipient's username" aria-describedby="button-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" @onclick="PesquisarFilme" type="button" id="button-addon2">Pesquisar</button>
+                <button class="btn btn-outline-secondary" @onclick="LimparPesquisa" type="button">x</button>
             </div>
         </div>
     </div>
     <div class="row mb-5">
-        <div class="form-inline">
-            <label class="sr-only" for="inlineFormInputGroupUsername2">Username</label>
-            <div class="input-group mb-2 mr-sm-2">
-                <input type="text" class="form-control" id="inlineFormInputGroupUsername2" placeholder="Username">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Pesquisar</div>
-                </div>
-            </div>
-        </div>
         @foreach (var film in films)
         {
             <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
@@ -46,21 +37,64 @@ else
             </div>
         }
     </div>
-</div>
-    }
 
-@code 
+    <Paginacao quantidadeTotalPaginas="QuantidadeTotalPaginas" paginaAtual="paginaAtual"
+               Raio="2" PaginaSelecionada="PaginaSelecionada">
+        </Paginacao>
+</div>
+}
+
+@code
 {
-    Film[] films { get; set; }
-    
+    List<Film> films { get; set; }
+    private string tituloFilme = string.Empty;
+
+    private int QuantidadeTotalPaginas;
+    private int paginaAtual = 1;
+
     protected override async Task OnInitializedAsync()
     {
         await CarregarFilmes();
     }
 
-    async Task CarregarFilmes()
+    private async Task PesquisarFilme()
     {
-        films = await http.GetFromJsonAsync<Film[]>("/api/films");
+        paginaAtual = 1;
+        await CarregarFilmes();
+    }
 
+    private async Task LimparPesquisa()
+    {
+        tituloFilme = string.Empty;
+        await CarregarFilmes();
+    }
+
+    private async Task PaginaSelecionada(int pagina)
+    {
+        paginaAtual = pagina;
+        await CarregarFilmes(pagina);
+    }
+
+    async Task CarregarFilmes(int pagina = 1, int quantidadePorPagina = 8)
+    {
+        var httpResponse = await http.GetAsync($"api/films?Pagina={pagina}&QuantidadePorPagina={quantidadePorPagina}&titulo={tituloFilme}");
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            QuantidadeTotalPaginas = int.Parse(httpResponse.Headers.GetValues("totalPaginas").FirstOrDefault());
+
+            if (QuantidadeTotalPaginas >= 1)
+            {
+                var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+                films = JsonSerializer.Deserialize<List<Film>>(responseString, new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }else
+            {
+                LimparPesquisa();
+            }
+        }
     }
 }
