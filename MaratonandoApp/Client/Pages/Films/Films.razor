@@ -1,0 +1,65 @@
+﻿@page "/filmcatalog/films/{filmid:int}"
+@inject HttpClient http
+
+    <div>
+        <a href="/filmcatalog" class="btn btn-link">Voltar</a>
+    </div>
+<div class="container">
+    <div class="row">
+        
+        <div class="col-4 ">
+            <img src="@film.Poster" style="max-width: 100%;" alt="Alternate Text" />
+        </div>
+        <div class="col-8">
+            <div>
+                <h2>@film.Titulo</h2>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">Diretor:</span> @film.Diretor</p>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">Data de Estréia:</span> @film.DataEstreia.ToString("d")</p>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">Gênero:</span> @film.Genero</p>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">Duração:</span> @film.Duracao min</p>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">País de origem:</span> @film.Pais</p>
+            </div>
+            <div>
+                <p><span style="font-weight: bold">Sinopse:</span> @film.Sinopse</p>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary mr-3">
+                    Marvar como visto <span class="oi oi-check"></span>
+                </button>
+                <button class="btn btn-primary mr-3">
+                    Marvar como favorito <span class="oi oi-heart"></span>
+                </button>
+                <div>
+                    <label for="selectNota">Avalie:</label>
+                    <select id="selectNota" class="btn btn-primary">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    Film film = new Film();
+    [Parameter] public int filmid { get; set; }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        film = await http.GetFromJsonAsync<Film>($"api/films/{filmid}");
+    }
+}
