@@ -1,65 +1,176 @@
 ﻿@page "/filmcatalog/films/{filmid:int}"
 @inject HttpClient http
+@using System.Text.Json
 
-    <div>
-        <a href="/filmcatalog" class="btn btn-link">Voltar</a>
-    </div>
+<div>
+	<a href="/filmcatalog" class="btn btn-link">Voltar</a>
+</div>
 <div class="container">
-    <div class="row">
-        
-        <div class="col-4 ">
-            <img src="@film.Poster" style="max-width: 100%;" alt="Alternate Text" />
-        </div>
-        <div class="col-8">
-            <div>
-                <h2>@film.Titulo</h2>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">Diretor:</span> @film.Diretor</p>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">Data de Estréia:</span> @film.DataEstreia.ToString("d")</p>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">Gênero:</span> @film.Genero</p>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">Duração:</span> @film.Duracao min</p>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">País de origem:</span> @film.Pais</p>
-            </div>
-            <div>
-                <p><span style="font-weight: bold">Sinopse:</span> @film.Sinopse</p>
-            </div>
-            <div class="row">
-                <button class="btn btn-primary mr-3">
-                    Marvar como visto <span class="oi oi-check"></span>
-                </button>
-                <button class="btn btn-primary mr-3">
-                    Marvar como favorito <span class="oi oi-heart"></span>
-                </button>
-                <div>
-                    <label for="selectNota">Avalie:</label>
-                    <select id="selectNota" class="btn btn-primary">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+
+		<div class="col-4 ">
+			<img src="@film.Poster" style="max-width: 100%;" alt="Alternate Text" />
+		</div>
+		<div class="col-8">
+			<div>
+				<h2>@film.Titulo</h2>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">Diretor:</span> @film.Diretor
+				</p>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">Data de Estréia:</span> @film.DataEstreia.ToString("d")
+				</p>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">Gênero:</span> @film.Genero
+				</p>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">Duração:</span> @film.Duracao min
+				</p>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">País de origem:</span> @film.Pais
+				</p>
+			</div>
+			<div>
+				<p>
+					<span style="font-weight: bold">Sinopse:</span> @film.Sinopse
+				</p>
+			</div>
+			<div class="row">
+				<button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
+					@botao1  <span class="oi oi-check"></span>
+				</button>
+				<button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
+					@botao2 <span class="oi oi-heart"></span>
+				</button>
+				<div>
+					<label for="selectNota">Avalie:</label>
+					<select id="selectNota" class="btn btn-primary">
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 @code {
     Film film = new Film();
+    FilmsOnLibrary fol = new FilmsOnLibrary();
+    FilmLibrary filmlib = new FilmLibrary();
     [Parameter] public int filmid { get; set; }
+    public string botao1 { get; set; } = "Marcar como visto";
+    public string botao2 { get; set; } = "Marcar como favorito";
 
     protected async override Task OnParametersSetAsync()
     {
         film = await http.GetFromJsonAsync<Film>($"api/films/{filmid}");
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        ApplicationUser user = new ApplicationUser();
+        user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
+
+        filmlib = await loadFilmLibrary(user);
+
+        fol = await loadFilmOnLibrary(filmlib);
+
+        if (fol != null)
+        {
+            if (fol.FlAssistido)
+                botao1 = "Assistido";
+            if (fol.FlFavorito)
+                botao2 = "Favoritado";
+        }
+
+    }
+
+    private async Task<FilmLibrary> loadFilmLibrary(ApplicationUser user)
+    {
+        List<FilmLibrary> filmsLibraries = await http.GetFromJsonAsync<List<FilmLibrary>>("api/filmlibraries/");
+        FilmLibrary libraryadd = new FilmLibrary();
+        bool existe = false;
+
+        foreach (var filmlibrary in filmsLibraries)
+        {
+            if (filmlibrary.UserId.Equals(user.Id))
+            {
+                existe = true;
+                return filmlibrary;
+            }
+        }
+
+        if (!existe)
+        {
+            libraryadd.UserId = user.Id;
+            var response = await http.PostAsJsonAsync<FilmLibrary>("api/filmlibraries", libraryadd);
+
+            libraryadd = await response.Content.ReadFromJsonAsync<FilmLibrary>();
+        }
+
+        return libraryadd;
+    }
+
+    private async Task<FilmsOnLibrary> loadFilmOnLibrary(FilmLibrary filmLibrary)
+    {
+        List<FilmsOnLibrary> filmsOnLibraries = await http.GetFromJsonAsync<List<FilmsOnLibrary>>("api/FilmsOnLibraries/");
+        FilmsOnLibrary filmsOnLibrary = new FilmsOnLibrary();
+
+        foreach (var folibrary in filmsOnLibraries)
+        {
+            if (folibrary.FilmLibraryId.Equals(filmLibrary.FilmLibraryId) && folibrary.FilmId.Equals(filmid))
+            {
+                return folibrary;
+            }
+        }
+
+        return null;
+    }
+
+    async Task marcarComoVisto()
+    {
+        if (fol == null)
+        {
+            fol.FilmLibraryId = filmlib.FilmLibraryId;
+            fol.FilmId = filmid;
+            fol.FlAssistido = true;
+            fol.DataAssistido = DateTime.Now;
+
+            await http.PostAsJsonAsync<FilmsOnLibrary>("api/filmsonLiberaries", fol);
+
+            botao1 = "Assistido";
+
+        }
+        else if (fol != null)
+        {
+            fol.FlAssistido = false;
+            if (fol.FlFavorito)
+                fol.FlFavorito = false;
+            fol.DataAssistido.;
+            fol.NotaFilme = 0;
+
+            await http.De
+        }
+
+
+    }
+
+    public void marcarComoFavorito()
+    {
+
     }
 }
