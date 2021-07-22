@@ -47,33 +47,53 @@
 			</div>
 			<div class="row">
 				<button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
-					@botao1  <span class="oi oi-check"></span>
+					@check_button  <span class="oi oi-check"></span>
 				</button>
 				<button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
-					@botao2 <span class="oi oi-heart"></span>
+					@fave_button <span class="oi oi-heart"></span>
 				</button>
 				<div>
 					<label for="selectNota">Avalie:</label>
-					<select id="selectNota" class="btn btn-primary">
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-					</select>
+                    <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
+                        @foreach (var nota in notas)
+                         {
+                        <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
+                         }
+                    </select>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
-
+<div class="container">
+    <div class="row">
+        <div class="col-10 mt-4 col-8" style="margin: 0 auto">
+            <div class="input-group mb-3">
+                <input @bind="@novoComentario" class="form-control" placeholder="Digite seu comentário" aria-label="Recipient's username" aria-describedby="basic-addon2" />
+                <div class="input-group-append">
+                    /input>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="salvarComentario">Comentar</button>
+                </div>
+            </div>
+        </div>
+        @*<div id="accordion">
+                @foreach (var comentario in comentarios)
+                {
+                    <Comentarios>
+                }
+            </div>*@
+    </div>
+</div>
 @code {
+    [Parameter] public int filmid { get; set; }
     Film film = new Film();
     FilmsOnLibrary fol = new FilmsOnLibrary();
     FilmLibrary filmlib = new FilmLibrary();
-    [Parameter] public int filmid { get; set; }
-    public string botao1 { get; set; } = "Marcar como visto";
-    public string botao2 { get; set; } = "Marcar como favorito";
+    List<int> notas = new List<int>() { 0, 1, 2, 3, 4, 5 };
+    public string check_button { get; set; } = "Marcar como visto";
+    public string fave_button { get; set; } = "Marcar como favorito";
+    public int filmrate { get; set; } = 0;
+    public string novoComentario { get; set; }
 
     protected async override Task OnParametersSetAsync()
     {
@@ -92,9 +112,10 @@
         if (fol != null)
         {
             if (fol.FlAssistido)
-                botao1 = "Assistido";
+                check_button = "Assistido";
             if (fol.FlFavorito)
-                botao2 = "Favoritado";
+                fave_button = "Favoritado";
+            filmrate = fol.NotaFilme;
         }
 
     }
@@ -141,35 +162,124 @@
         return null;
     }
 
-    async Task marcarComoVisto()
+    public async Task marcarComoVisto()
     {
         if (fol == null)
         {
+            fol = new FilmsOnLibrary();
             fol.FilmLibraryId = filmlib.FilmLibraryId;
-            fol.FilmId = filmid;
+            fol.FilmId = film.FilmId;
             fol.FlAssistido = true;
+            fol.FlFavorito = false;
+            fol.NotaFilme = 0;
             fol.DataAssistido = DateTime.Now;
 
-            await http.PostAsJsonAsync<FilmsOnLibrary>("api/filmsonLiberaries", fol);
+            await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", fol);
 
-            botao1 = "Assistido";
+            check_button = "Assistido";
 
         }
-        else if (fol != null)
+        else
         {
-            fol.FlAssistido = false;
-            if (fol.FlFavorito)
+            if (fol.FlAssistido)
+            {
+                fol.FlAssistido = false;
                 fol.FlFavorito = false;
-            fol.DataAssistido.;
-            fol.NotaFilme = 0;
+                fol.NotaFilme = 0;
 
-            await http.De
+                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
+                if (response.IsSuccessStatusCode)
+                {
+                    check_button = "Marcar como visto";
+                }
+
+            }
+            else
+            {
+                fol.FlAssistido = true;
+                fol.DataAssistido = DateTime.Now;
+
+                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
+                if (response.IsSuccessStatusCode)
+                {
+                    check_button = "Assistido";
+                }
+
+            }
         }
-
-
     }
 
-    public void marcarComoFavorito()
+    public async Task marcarComoFavorito()
+    {
+        if (fol == null)
+        {
+            fol = new FilmsOnLibrary();
+            fol.FilmLibraryId = filmlib.FilmLibraryId;
+            fol.FilmId = film.FilmId;
+            fol.FlAssistido = true;
+            fol.FlFavorito = true;
+            fol.NotaFilme = 0;
+            fol.DataAssistido = DateTime.Now;
+
+            await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", fol);
+
+            check_button = "Assistido";
+            fave_button = "Favoritado";
+        }
+        else
+        {
+            if (fol.FlFavorito)
+            {
+                fol.FlFavorito = false;
+
+                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
+                if (response.IsSuccessStatusCode)
+                {
+                    fave_button = "Marcar como favorito";
+                }
+
+            }
+            else
+            {
+                fol.FlFavorito = true;
+
+                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
+                if (response.IsSuccessStatusCode)
+                {
+                    fave_button = "Favoritado";
+                }
+
+            }
+        }
+    }
+
+    public async Task avaliarFilme(ChangeEventArgs e)
+    {
+        filmrate = Int32.Parse(e.Value.ToString());
+
+        if (fol == null)
+        {
+            fol = new FilmsOnLibrary();
+            fol.FilmLibraryId = filmlib.FilmLibraryId;
+            fol.FilmId = film.FilmId;
+            fol.FlAssistido = true;
+            fol.FlFavorito = false;
+            fol.NotaFilme = filmrate;
+            fol.DataAssistido = DateTime.Now;
+
+            await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", fol);
+
+            check_button = "Assistido";
+        }
+        else
+        {
+            fol.NotaFilme = filmrate;
+
+            var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
+        }
+    }
+
+    public async Task salvarComentario()
     {
 
     }
