@@ -4,19 +4,21 @@ using MaratonandoApp.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MaratonandoApp.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210723005211_ArrumandoComentarios")]
+    partial class ArrumandoComentarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.8")
+                .HasAnnotation("ProductVersion", "5.0.7")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
@@ -174,19 +176,15 @@ namespace MaratonandoApp.Server.Migrations
                     b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Comment")
+                    b.Property<string>("ComentarioMsg")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int>("FilmId")
                         .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("FilmCommentId");
 
@@ -194,7 +192,7 @@ namespace MaratonandoApp.Server.Migrations
 
                     b.HasIndex("FilmId");
 
-                    b.ToTable("FilmComment");
+                    b.ToTable("FilmComments");
                 });
 
             modelBuilder.Entity("MaratonandoApp.Shared.Models.Film.FilmLibrary", b =>
@@ -447,11 +445,11 @@ namespace MaratonandoApp.Server.Migrations
             modelBuilder.Entity("MaratonandoApp.Shared.Models.Film.FilmComment", b =>
                 {
                     b.HasOne("MaratonandoApp.Shared.Models.User.ApplicationUser", "ApplicationUser")
-                        .WithMany("filmComments")
+                        .WithMany("FilmComments")
                         .HasForeignKey("ApplicationUserId");
 
                     b.HasOne("MaratonandoApp.Shared.Models.Film.Film", "Film")
-                        .WithMany("filmComments")
+                        .WithMany("FilmComments")
                         .HasForeignKey("FilmId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -542,7 +540,7 @@ namespace MaratonandoApp.Server.Migrations
 
             modelBuilder.Entity("MaratonandoApp.Shared.Models.Film.Film", b =>
                 {
-                    b.Navigation("filmComments");
+                    b.Navigation("FilmComments");
 
                     b.Navigation("FilmOnLibraries");
                 });
@@ -554,7 +552,7 @@ namespace MaratonandoApp.Server.Migrations
 
             modelBuilder.Entity("MaratonandoApp.Shared.Models.User.ApplicationUser", b =>
                 {
-                    b.Navigation("filmComments");
+                    b.Navigation("FilmComments");
 
                     b.Navigation("FilmLibrary");
                 });

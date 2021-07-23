@@ -35,6 +35,6 @@ namespace MaratonandoApp.Shared.Models.Film
 
         public ICollection<FilmsOnLibrary> FilmOnLibraries { get; set; }
 
-        public ICollection<FilmComment> FilmComments { get; set; }
+        public ICollection<FilmComment> filmComments { get; set; }
     }
 }

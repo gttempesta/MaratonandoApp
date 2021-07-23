@@ -11,6 +11,6 @@ namespace MaratonandoApp.Shared.Models.User
     {
         public FilmLibrary FilmLibrary { get; set; }
 
-        public ICollection<FilmComment> FilmComments { get; set; }
+        public ICollection<FilmComment> filmComments { get; set; }
     }
 }

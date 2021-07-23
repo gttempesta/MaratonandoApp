@@ -4,14 +4,16 @@ using MaratonandoApp.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MaratonandoApp.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210723015033_ComComentariosNovo")]
+    partial class ComComentariosNovo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,20 +183,19 @@ namespace MaratonandoApp.Server.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<string>("FilmId")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FilmId")
+                    b.Property<int?>("FilmId1")
                         .HasColumnType("int");
 
                     b.HasKey("FilmCommentId");
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.HasIndex("FilmId");
+                    b.HasIndex("FilmId1");
 
-                    b.ToTable("FilmComment");
+                    b.ToTable("filmComments");
                 });
 
             modelBuilder.Entity("MaratonandoApp.Shared.Models.Film.FilmLibrary", b =>
@@ -452,9 +453,7 @@ namespace MaratonandoApp.Server.Migrations
 
                     b.HasOne("MaratonandoApp.Shared.Models.Film.Film", "Film")
                         .WithMany("filmComments")
-                        .HasForeignKey("FilmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FilmId1");
 
                     b.Navigation("ApplicationUser");
 

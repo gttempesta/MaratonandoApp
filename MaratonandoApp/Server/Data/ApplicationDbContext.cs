@@ -21,8 +21,7 @@ namespace MaratonandoApp.Server.Data
 
         public DbSet<FilmLibrary> FilmLibraries { get; set; }
         public DbSet<Film> Films { get; set; }
-        public DbSet<FilmsOnLibrary> FilmsOnLibraries { get; set; } 
-        public DbSet<FilmComment> FilmComments { get; set; }
+        public DbSet<FilmsOnLibrary> FilmsOnLibraries { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,14 +31,6 @@ namespace MaratonandoApp.Server.Data
                 .HasOne(a => a.FilmLibrary)
                 .WithOne(b => b.ApplicationUser)
                 .HasForeignKey<FilmLibrary>(b => b.UserId);
-
-            modelBuilder.Entity<Film>()
-                .HasMany(c => c.FilmComments)
-                .WithOne(e => e.Film);
-
-            modelBuilder.Entity<FilmComment>()
-                .HasOne(a => a.ApplicationUser)
-                .WithMany(b => b.FilmComments);
 
             modelBuilder.Entity<FilmsOnLibrary>().HasKey(fol => new { fol.FilmLibraryId, fol.FilmId });
 
@@ -53,5 +44,8 @@ namespace MaratonandoApp.Server.Data
                 .WithMany(f => f.filmsOnLibraries)
                 .HasForeignKey(fol => fol.FilmLibraryId);
         }
+
+
+        public DbSet<MaratonandoApp.Shared.Models.Film.FilmComment> FilmComment { get; set; }
     }
 }

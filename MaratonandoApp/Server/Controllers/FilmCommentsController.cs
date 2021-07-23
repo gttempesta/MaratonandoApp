@@ -23,16 +23,35 @@ namespace MaratonandoApp.Server.Controllers
 
         // GET: api/FilmComments
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FilmComment>>> GetFilmComments()
+        public async Task<ActionResult<IEnumerable<FilmComment>>> GetFilmComment()
         {
-            return await _context.FilmComments.ToListAsync();
+            return await _context.FilmComment.ToListAsync();
+        }
+
+        // GET: api/FilmComments/GetFilmCommentByFilm
+        [HttpGet("GetFilmCommentByFilm/{id}")]
+        public async Task<ActionResult<IEnumerable<FilmComment>>> GetFilmCommentByFilm(int id)
+        {
+            List<FilmComment> filmComments =  await _context.FilmComment.ToListAsync();
+
+            List<FilmComment> filmsCommentsByMovies = new List<FilmComment>();
+
+            foreach (var fc in filmComments)
+            {
+                if (fc.FilmId == id)
+                {
+                    filmsCommentsByMovies.Add(fc);
+                }
+            }
+
+            return filmsCommentsByMovies;
         }
 
         // GET: api/FilmComments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<FilmComment>> GetFilmComment(int id)
         {
-            var filmComment = await _context.FilmComments.FindAsync(id);
+            var filmComment = await _context.FilmComment.FindAsync(id);
 
             if (filmComment == null)
             {
@@ -78,7 +97,7 @@ namespace MaratonandoApp.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<FilmComment>> PostFilmComment(FilmComment filmComment)
         {
-            _context.FilmComments.Add(filmComment);
+            _context.FilmComment.Add(filmComment);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetFilmComment", new { id = filmComment.FilmCommentId }, filmComment);
@@ -88,13 +107,13 @@ namespace MaratonandoApp.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFilmComment(int id)
         {
-            var filmComment = await _context.FilmComments.FindAsync(id);
+            var filmComment = await _context.FilmComment.FindAsync(id);
             if (filmComment == null)
             {
                 return NotFound();
             }
 
-            _context.FilmComments.Remove(filmComment);
+            _context.FilmComment.Remove(filmComment);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +121,7 @@ namespace MaratonandoApp.Server.Controllers
 
         private bool FilmCommentExists(int id)
         {
-            return _context.FilmComments.Any(e => e.FilmCommentId == id);
+            return _context.FilmComment.Any(e => e.FilmCommentId == id);
         }
     }
 }

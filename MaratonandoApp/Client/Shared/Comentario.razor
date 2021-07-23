@@ -1,0 +1,14 @@
+﻿<div class="card mb-2">
+    <div class="card-header">
+        @Autor | @CriadoEm.ToShortDateString()
+    </div>
+    <div class="card-body">
+        <p class="card-text">@Comment</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Autor { get; set; }
+    [Parameter] public string Comment { get; set; }
+    [Parameter] public DateTime CriadoEm { get; set; }
+}
