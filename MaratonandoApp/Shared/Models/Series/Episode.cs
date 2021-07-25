@@ -15,10 +15,8 @@ namespace MaratonandoApp.Shared.Models.Series
         public int nroTemporada { get; set; }
         public string sinopse { get; set; }
 
-        public int SerieId { get; set; }
-        public Serie Serie { get; set; }
-
         public ICollection<EpisodeComment> episodeComments { get; set; }
+        public ICollection<EpisodeOnLibrary> EpisodeOnLibrary { get; set; }
 
     }
 }
