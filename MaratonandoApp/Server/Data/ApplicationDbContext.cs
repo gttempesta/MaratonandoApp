@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MaratonandoApp.Shared.Models.Film;
 using MaratonandoApp.Shared.Models.User;
+using MaratonandoApp.Shared.Models.Series;
 
 namespace MaratonandoApp.Server.Data
 {
@@ -22,11 +23,20 @@ namespace MaratonandoApp.Server.Data
         public DbSet<FilmLibrary> FilmLibraries { get; set; }
         public DbSet<Film> Films { get; set; }
         public DbSet<FilmsOnLibrary> FilmsOnLibraries { get; set; }
+        public DbSet<FilmComment> FilmComment { get; set; }
+        public DbSet<SerieLibrary> SerieLibrary { get; set; }
+        public DbSet<Episode> episode { get; set; }
+        public DbSet<SerieOnLibrary> SerieOnLibrary { get; set; }
+
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            //FILMS
+
             modelBuilder.Entity<ApplicationUser>()
                 .HasOne(a => a.FilmLibrary)
                 .WithOne(b => b.ApplicationUser)
@@ -43,9 +53,13 @@ namespace MaratonandoApp.Server.Data
                 .HasOne<FilmLibrary>(fol => fol.FilmLibrary)
                 .WithMany(f => f.filmsOnLibraries)
                 .HasForeignKey(fol => fol.FilmLibraryId);
+
+            //SERIES
+
+            modelBuilder.Entity<ApplicationUser>()
+                .HasOne(sl => sl.SerieLibrary)
+                .WithOne(sla => sla.ApplicationUser)
+                .HasForeignKey<SerieLibrary>(sla => sla.UserId);
         }
-
-
-        public DbSet<MaratonandoApp.Shared.Models.Film.FilmComment> FilmComment { get; set; }
     }
 }
