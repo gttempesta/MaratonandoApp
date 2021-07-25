@@ -29,7 +29,7 @@ namespace MaratonandoApp.Server.Data
         public DbSet<EpisodeComment> EpisodeComment { get; set; }
         public DbSet<EpisodeLibrary> EpisodeLibrary { get; set; }
         public DbSet<EpisodeOnLibrary> EpisodeOnLibrary { get; set; }
-        public DbSet<Serie> Serie { get; set; }
+        public DbSet<Serie> Series { get; set; }
         public DbSet<SerieLibrary> SerieLibrary { get; set; }
         public DbSet<SerieOnLibrary> SerieOnLibrary { get; set; }
 

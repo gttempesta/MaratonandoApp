@@ -19,6 +19,8 @@ namespace MaratonandoApp.Shared.Models.Series
 
         public int SeriesStatus { get; set; }
 
+        public bool FlFavoritado { get; set; }
+
         public EpisodeLibrary episodeLibrary { get; set; }
     }
 }
