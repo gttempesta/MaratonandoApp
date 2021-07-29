@@ -16,7 +16,7 @@ namespace MaratonandoApp.Shared.Models.Series
         public string UserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
 
-        public ICollection<SerieOnLibrary> serieOnLibrary { get; set; }
+        public ICollection<SerieOnLibrary> SerieOnLibrary { get; set; }
 
     }
 }

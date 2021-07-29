@@ -32,7 +32,7 @@ namespace MaratonandoApp.Shared.Models.Series
 
         public ICollection<SerieOnLibrary> SerieOnLibrary { get; set; }
 
-        public ICollection<Episode> episodes { get; set; }
+        public ICollection<Episode> Episodes { get; set; }
 
     }
 }

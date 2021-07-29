@@ -1,202 +1,156 @@
 ﻿@page "/seriescatalog/series/{serieid:int}"
 @inject HttpClient http
-@using System.Text.Json
 
-<div>
-    <a href="/seriescatalog" class="btn btn-link">Voltar</a>
-</div>
-<div class="container">
-    <div class="row">
-
-        <div class="col-4 ">
-            <img src="@serie.Poster" style="max-width: 100%;" alt="Alternate Text" />
-        </div>
-        <div class="col-8">
-            <div>
-                <h2>@serie.Titulo</h2>
+    <div>
+        <a href="/seriescatalog" class="btn btn-link">Voltar</a>
+    </div>
+    <div  class="container">
+        <div class="row">
+            <div class="col-4">
+                <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;"/>
             </div>
-            <div>
-                <p>
-                    <span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToString()
-                </p>
-            </div>
-            <div>
-                <p>
-                    <span style="font-weight: bold">Gênero:</span> @serie.Genero
-                </p>
-            </div>
-            <div>
-                <p>
-                    <span style="font-weight: bold">País de origem:</span> @serie.Pais
-                </p>
-            </div>
-            <div>
-                <p>
-                    <span style="font-weight: bold">Sinopse:</span> @serie.Sinopse
-                </p>
-            </div>
-            <div class="row">
+            <div class="col-8">
                 <div>
-                    <label for="selectNota">Status:</label>
-                    <select id="selectNota" class="btn btn-primary" @onchange="mudarStatus">
-                        @foreach (var status in statusSeries)
-                        {
-                            <option value="@status.Key" selected="@(@statusdefault == status.Key)">@status.Value</option>
-                        }
-                    </select>
+                    <h2>@serie.Titulo</h2>
+                    <p><span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToShortDateString()</p>
+                    <p><span style="font-weight: bold">Gênero:</span> @serie.Genero</p>
+                    <p><span style="font-weight: bold">País de Origem:</span> @serie.Pais</p>
+                    <p><span style="font-weight: bold">Sinopse:</span> @serie.Sinopse</p>
                 </div>
-                <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
-                    @fave_button <span class="oi oi-heart"></span>
-                </button>
-            </div>
+                <div class="row">
+                    <div>
+                        <label for="selectStatus">Status:</label>
+                        <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarStatus">
+                            @foreach (var status in statusSeries)
+                            {
+                                <option value="@status.Key" selected="@(statusAtual == status.Key)">@status.Value</option>
+                            }
+                        </select>
+                    </div>
+                    <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
+                        @fave_button <span class="oi oi-heart"></span>
+                    </button>
+                </div>
+            </div> 
         </div>
     </div>
-    @*<div class="row mt-5 mb-2">
-            <div class="input-group mb-3 col-8" style="margin: 0 auto">
-                <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
-                </div>
-            </div>
-        </div> *@
-</div>
 
-@code {
+@code{
+
     [Parameter] public int serieid { get; set; }
-    private ApplicationUser user = new ApplicationUser();
-    private Serie serie = new Serie();
-    private SerieOnLibrary sol = new SerieOnLibrary();
-    private SerieLibrary serielib = new SerieLibrary();
+    private Serie serie = new();
+    private Dictionary<int, string> statusSeries = new();
+    private int statusAtual { get; set; } = 0;
     private string fave_button { get; set; } = "Marcar como favorito";
-    private Dictionary<int, string> statusSeries = new Dictionary<int, string>();
-    private List<int> statuses = new List<int>() { 0, 1, 2, 3, 4 };
-    private int statusdefault { get; set; } = 0;
+    private SerieOnLibrary SOL = new();
 
     protected async override Task OnParametersSetAsync()
     {
-        serie = await http.GetFromJsonAsync<Serie>($"api/Series/{serieid}");
+        serie = await http.GetFromJsonAsync<Serie>($"api/series/{serieid}");
     }
 
     protected async override Task OnInitializedAsync()
     {
-        user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
-
-        serielib = await loadSerieLibrary(user);
-
-        sol = await loadSerieOnLibrary(serielib);
-
-        statusSeries.Add(0, "Adicionar a biblioteca");
+        statusSeries.Add(0, "------------");
         statusSeries.Add(1, "Assistindo");
         statusSeries.Add(2, "Quero Assistir");
         statusSeries.Add(3, "Abandonei");
         statusSeries.Add(4, "Finalizada");
 
-        if (sol != null)
-        {
-            if (sol.FlFavoritado)
-                fave_button = "Favoritado";
-            statusdefault = sol.SeriesStatus;
-        }
+        ApplicationUser user = await http.GetFromJsonAsync<ApplicationUser>("api/account");
+        SerieLibrary serielib = await carregarSerieLibrary(user);
+        SOL = await carregarSerieOnLibrary(serielib);
 
-
-    }
-
-    private async Task<SerieLibrary> loadSerieLibrary(ApplicationUser user)
-    {
-        List<SerieLibrary> seriesLibraries = await http.GetFromJsonAsync<List<SerieLibrary>>("api/SerieLibraries");
-        SerieLibrary libraryadd = new SerieLibrary();
-        bool existe = false;
-
-        foreach (var serieLibrary in seriesLibraries)
-        {
-            if (serieLibrary.UserId.Equals(user.Id))
-            {
-                existe = true;
-                return serieLibrary;
-            }
-        }
-
-        if (!existe)
-        {
-            libraryadd.UserId = user.Id;
-            var response = await http.PostAsJsonAsync<SerieLibrary>("api/SerieLibraries", libraryadd);
-
-            libraryadd = await response.Content.ReadFromJsonAsync<SerieLibrary>();
-        }
-
-        return libraryadd;
-    }
-
-    private async Task<SerieOnLibrary> loadSerieOnLibrary(SerieLibrary serieLibrary)
-    {
-        List<SerieOnLibrary> seriesOnLibrary = await http.GetFromJsonAsync<List<SerieOnLibrary>>("api/SeriesOnLibraries/");
-        SerieOnLibrary serieOnLibrary = new SerieOnLibrary();
-
-        foreach (var solibrary in seriesOnLibrary)
-        {
-            if (solibrary.SerieLibraryId.Equals(serieLibrary.SerieLibraryId) && solibrary.SerieId.Equals(serieid))
-            {
-                return solibrary;
-            }
-        }
-
-        return null;
+        if (SOL.FlFavoritado)
+            fave_button = "Favoritado";
+        statusAtual = SOL.SeriesStatus;
     }
 
     private async Task mudarStatus(ChangeEventArgs e)
     {
-        statusdefault = Int32.Parse(e.Value.ToString());
+        statusAtual = Int32.Parse(e.Value.ToString());
 
-        if (sol == null)
+        if (statusAtual == 0)
         {
-            sol = new SerieOnLibrary();
-            sol.SerieId = serie.SerieId;
-            sol.SerieLibraryId = serielib.SerieLibraryId;
-            sol.SeriesStatus = statusdefault;
-            sol.FlFavoritado = false;
+            SOL.FlFavoritado = false;
         }
+
+        SOL.SeriesStatus = statusAtual;
+
+        var response = await http.PutAsJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/{SOL.SerieOnLibraryId}", SOL);
+
+        if (response.IsSuccessStatusCode)
+        {
+            if (!SOL.FlFavoritado)
+            {
+                fave_button = "Marcar como favorito";
+            }
+        }
+    }
+
+    private async Task<SerieLibrary> carregarSerieLibrary(ApplicationUser user)
+    {
+        var sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+
+        if (sl.UserId == null && sl.SerieLibraryId == 0)
+        {
+            sl.UserId = user.Id;
+
+            var response = await http.PostAsJsonAsync<SerieLibrary>("api/SerieLibraries", sl);
+
+            sl = await response.Content.ReadFromJsonAsync<SerieLibrary>();
+        }
+
+        return sl;
+    }
+
+    private async Task<SerieOnLibrary> carregarSerieOnLibrary(SerieLibrary sl)
+    {
+        var sol = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{serieid}");
+
+        if(sol.SerieLibraryId == 0 && sol.SerieId == 0)
+        {
+            sol.SerieLibraryId = sl.SerieLibraryId;
+            sol.SerieId = serieid;
+            sol.SeriesStatus = 0;
+            sol.FlFavoritado = false;
+
+            var response = await http.PostAsJsonAsync<SerieOnLibrary>("api/SerieOnLibraries", sol);
+
+            sol = await response.Content.ReadFromJsonAsync<SerieOnLibrary>();
+        }
+
+        return sol;
     }
 
     private async Task marcarComoFavorito()
     {
-        if (sol == null)
+        if (!SOL.FlFavoritado && SOL.SeriesStatus == 0)
         {
-            sol = new FilmsOnLibrary();
-            sol.FilmLibraryId = serielib.FilmLibraryId;
-            sol.FilmId = serie.FilmId;
-            sol.FlAssistido = true;
-            sol.FlFavorito = true;
-            sol.NotaFilme = 0;
-            sol.DataAssistido = DateTime.Now;
-
-            await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", sol);
-
-            check_button = "Assistido";
-            fave_button = "Favoritado";
+            SOL.FlFavoritado = true;
+            SOL.SeriesStatus = 1;
         }
-        else
+        else if (!SOL.FlFavoritado && SOL.SeriesStatus != 0)
         {
-            if (sol.FlFavorito)
+            SOL.FlFavoritado = true;
+        }
+        else if (SOL.FlFavoritado)
+        {
+            SOL.FlFavoritado = false;
+        }
+
+        var response = await http.PutAsJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/{SOL.SerieOnLibraryId}", SOL);
+
+        if (response.IsSuccessStatusCode)
+        {
+            statusAtual = SOL.SeriesStatus;
+            if (SOL.FlFavoritado)
             {
-                sol.FlFavorito = false;
-
-                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{sol.FilmLibraryId}", sol);
-                if (response.IsSuccessStatusCode)
-                {
-                    fave_button = "Marcar como favorito";
-                }
-
+                fave_button = "Favoritado";
             }
             else
             {
-                sol.FlFavorito = true;
-
-                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{sol.FilmLibraryId}", sol);
-                if (response.IsSuccessStatusCode)
-                {
-                    fave_button = "Favoritado";
-                }
-
+                fave_button = "Marcar como favorito";
             }
         }
     }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MaratonandoApp.Server.Data;
 using MaratonandoApp.Shared.Models.Series;
+using MaratonandoApp.Shared.Models.User;
 
 namespace MaratonandoApp.Server.Controllers
 {
@@ -26,6 +27,24 @@ namespace MaratonandoApp.Server.Controllers
         public async Task<ActionResult<IEnumerable<SerieLibrary>>> GetSerieLibrary()
         {
             return await _context.SerieLibrary.ToListAsync();
+        }
+
+        // GET: api/SerieLibraries/getUserLoadSerie
+        [HttpGet("getUserLoadSerie/{id}")]
+        public async Task<ActionResult<SerieLibrary>> GetUserSerieLibrary(string id)
+        {
+            var serieLibraries = await _context.SerieLibrary.ToListAsync();
+            SerieLibrary serielib = new();
+
+            foreach (var sl in serieLibraries)
+            {
+                if (sl.UserId.Equals(id))
+                {
+                    serielib = sl;
+                }
+            }
+
+            return serielib;
         }
 
         // GET: api/SerieLibraries/5
