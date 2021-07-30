@@ -42,6 +42,13 @@ namespace MaratonandoApp.Server.Controllers
             return episode;
         }
 
+        // GET: api/Episodes/{ids}/temporada{id}
+        [HttpGet("{ids}/temporada/{id}")]
+        public async Task<ActionResult<List<Episode>>> GetEpisodeBySeasonAndSerie(int ids, int id)
+        {
+            return await _context.Episode.Where<Episode>(ep => ep.nroTemporada == id && ep.SerieId == ids).ToListAsync();
+        }
+
         // PUT: api/Episodes/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]

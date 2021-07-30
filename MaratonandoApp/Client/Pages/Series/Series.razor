@@ -1,39 +1,73 @@
 ﻿@page "/seriescatalog/series/{serieid:int}"
 @inject HttpClient http
 
-    <div>
-        <a href="/seriescatalog" class="btn btn-link">Voltar</a>
-    </div>
-    <div  class="container">
-        <div class="row">
-            <div class="col-4">
-                <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;"/>
+<div>
+    <a href="/seriescatalog" class="btn btn-link">Voltar</a>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-4">
+            <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
+        </div>
+        <div class="col-8">
+            <div>
+                <h2>@serie.Titulo</h2>
+                <p><span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToShortDateString()</p>
+                <p><span style="font-weight: bold">Gênero:</span> @serie.Genero</p>
+                <p><span style="font-weight: bold">País de Origem:</span> @serie.Pais</p>
+                <p><span style="font-weight: bold">Sinopse:</span> @serie.Sinopse</p>
             </div>
-            <div class="col-8">
+            <div class="row">
                 <div>
-                    <h2>@serie.Titulo</h2>
-                    <p><span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToShortDateString()</p>
-                    <p><span style="font-weight: bold">Gênero:</span> @serie.Genero</p>
-                    <p><span style="font-weight: bold">País de Origem:</span> @serie.Pais</p>
-                    <p><span style="font-weight: bold">Sinopse:</span> @serie.Sinopse</p>
+                    <label for="selectStatus">Status:</label>
+                    <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarStatus">
+                        @foreach (var status in statusSeries)
+                        {
+                            <option value="@status.Key" selected="@(statusAtual == status.Key)">@status.Value</option>
+                        }
+                    </select>
                 </div>
-                <div class="row">
-                    <div>
-                        <label for="selectStatus">Status:</label>
-                        <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarStatus">
-                            @foreach (var status in statusSeries)
-                            {
-                                <option value="@status.Key" selected="@(statusAtual == status.Key)">@status.Value</option>
-                            }
-                        </select>
-                    </div>
-                    <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
-                        @fave_button <span class="oi oi-heart"></span>
-                    </button>
-                </div>
-            </div> 
+                <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
+                    @fave_button <span class="oi oi-heart"></span>
+                </button>
+            </div>
         </div>
     </div>
+    <div class="row">
+        <div>
+            <label for="selectStatus">Temporadas:</label>
+            <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarTemporada">
+                @foreach (var temporada in nroTemporadas)
+                {
+                    <option value="@temporada" selected="@(@tempSel == temporada)">Temporada @temporada</option>
+                }
+            </select>
+        </div>
+        <div>
+            @if (episodes == null)
+            {
+                <p><em>Carregando...</em></p>
+            }
+            else if (episodes.Count == 0)
+            {
+                <p><em>Sem episódios cadastrados...</em></p>
+            }
+            else
+            {
+        <ul class="list-group">
+            @foreach (var episode in episodes)
+            {
+            <li class="list-group-item">
+                <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                @episode.nroEpisode) @episode.titulo
+            </li>
+            }
+        </ul>
+            }
+
+        </div>
+    </div>
+</div>
 
 @code{
 
@@ -43,14 +77,24 @@
     private int statusAtual { get; set; } = 0;
     private string fave_button { get; set; } = "Marcar como favorito";
     private SerieOnLibrary SOL = new();
-
-    protected async override Task OnParametersSetAsync()
-    {
-        serie = await http.GetFromJsonAsync<Serie>($"api/series/{serieid}");
-    }
+    private List<int> nroTemporadas = new();
+    private int tempSel { get; set; } = 1;
+    private List<Episode> episodes = new();
 
     protected async override Task OnInitializedAsync()
     {
+        serie = await http.GetFromJsonAsync<Serie>($"api/series/{serieid}");
+
+        int valor = 1;
+
+        while (valor <= serie.QtdTemporadas)
+        {
+            nroTemporadas.Add(valor);
+            valor++;
+        }
+
+        await carregarEpisodiosTemporada();
+
         statusSeries.Add(0, "------------");
         statusSeries.Add(1, "Assistindo");
         statusSeries.Add(2, "Quero Assistir");
@@ -108,7 +152,7 @@
     {
         var sol = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{serieid}");
 
-        if(sol.SerieLibraryId == 0 && sol.SerieId == 0)
+        if (sol.SerieLibraryId == 0 && sol.SerieId == 0)
         {
             sol.SerieLibraryId = sl.SerieLibraryId;
             sol.SerieId = serieid;
@@ -152,6 +196,21 @@
             {
                 fave_button = "Marcar como favorito";
             }
+        }
+    }
+
+    private async Task carregarEpisodiosTemporada()
+    {
+        episodes = await http.GetFromJsonAsync<List<Episode>>($"api/Episodes/{serieid}/temporada/{tempSel}");
+        StateHasChanged();
+    }
+
+    private async Task mudarTemporada(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int id))
+        {
+            tempSel = id;
+            await carregarEpisodiosTemporada();
         }
     }
 }
