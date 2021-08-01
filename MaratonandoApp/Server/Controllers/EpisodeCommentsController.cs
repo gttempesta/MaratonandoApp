@@ -28,6 +28,24 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.EpisodeComment.ToListAsync();
         }
 
+        // GET: api/EpisodeComments/getQtdCommentEp/id
+        [HttpGet("getQtdCommentEp/{id}")]
+        public async Task<ActionResult<int>> getQtdCommentEp(string id)
+        {
+            var retorno = await _context.EpisodeComment.ToListAsync();
+            int quantidade = 0;
+
+            foreach (var fc in retorno)
+            {
+                if (fc.ApplicationUserId == id)
+                {
+                    quantidade++;
+                }
+            }
+
+            return quantidade;
+        }
+
         // GET: api/EpisodeComments/GetCommentsCommentByEp
         [HttpGet("GetCommentsCommentByEp/{id}")]
         public async Task<ActionResult<IEnumerable<EpisodeComment>>> GetCommentsCommentByEp(int id)

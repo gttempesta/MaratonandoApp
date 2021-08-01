@@ -28,6 +28,24 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.FilmComment.ToListAsync();
         }
 
+        // GET: api/FilmComments
+        [HttpGet("getQtdCommentFilm/{id}")]
+        public async Task<ActionResult<int>> getQtdCommentFilm(string id)
+        {
+            var retorno = await _context.FilmComment.ToListAsync();
+            int quantidade = 0;
+
+            foreach (var fc in retorno)
+            {
+                if (fc.ApplicationUserId == id)
+                {
+                    quantidade++;
+                }
+            }
+
+            return quantidade;
+        }
+
         // GET: api/FilmComments/GetFilmCommentByFilm
         [HttpGet("GetFilmCommentByFilm/{id}")]
         public async Task<ActionResult<IEnumerable<FilmComment>>> GetFilmCommentByFilm(int id)

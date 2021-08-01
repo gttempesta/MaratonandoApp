@@ -42,6 +42,24 @@ namespace MaratonandoApp.Server.Controllers
             return filmsOnLibrary;
         }
 
+        // GET: api/FilmsOnLibraries
+        [HttpGet("getQtdFilmesVisto/{id}")]
+        public async Task<ActionResult<int>> getQtdFilmesVisto(int id)
+        {
+            var retorno =  await _context.FilmsOnLibraries.ToListAsync();
+            int quantidade = 0;
+
+            foreach (var fl in retorno)
+            {
+                if (fl.FilmLibraryId == id && fl.FlAssistido)
+                {
+                    quantidade++;
+                }
+            }
+
+            return quantidade;
+        }
+
         // PUT: api/FilmsOnLibraries/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]

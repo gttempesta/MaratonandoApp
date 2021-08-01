@@ -30,16 +30,19 @@ namespace MaratonandoApp.Server.Controllers
 
         // GET: api/FilmLibraries/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FilmLibrary>> GetFilmLibrary(int id)
+        public async Task<ActionResult<FilmLibrary>> GetFilmLibrary(string id)
         {
-            var filmLibrary = await _context.FilmLibraries.FindAsync(id);
+            var filmLibraries = await _context.FilmLibraries.ToListAsync();
 
-            if (filmLibrary == null)
+            foreach (var filmLibrary in filmLibraries)
             {
-                return NotFound();
+                if (filmLibrary.UserId.Equals(id))
+                {
+                    return filmLibrary;
+                }
             }
 
-            return filmLibrary;
+            return new FilmLibrary();
         }
 
         // PUT: api/FilmLibraries/5

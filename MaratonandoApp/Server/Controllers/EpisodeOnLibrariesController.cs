@@ -50,6 +50,24 @@ namespace MaratonandoApp.Server.Controllers
             return episodeOnLibrary;
         }
 
+        // GET: api/EpisodeOnLibraries/getQtdEpLb/5
+        [HttpGet("getQtdEpLb/{ideol}")]
+        public async Task<ActionResult<int>> getQtdEpLb(int ideol)
+        {
+            var episodeOnLibrary = await _context.EpisodeOnLibrary.ToListAsync();
+            int quantidade = 0;
+
+            foreach(var eol in episodeOnLibrary)
+            {
+                if (eol.EpisodeLibraryId == ideol)
+                {
+                    quantidade++;
+                }
+            }
+
+            return quantidade;
+        }
+
         // PUT: api/EpisodeOnLibraries/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}/{ideol}")]

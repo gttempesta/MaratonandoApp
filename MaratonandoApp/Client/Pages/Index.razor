@@ -1,5 +1,112 @@
 ﻿@page "/"
+@inject HttpClient http
 
-<h1>Hello, world!</h1>
+<h1>Bem-vindo, @user.UserName</h1>
 
-Welcome to your new app.
+<div class="container mt-3">
+    <div class="row">
+        <div class="card-group col-12">
+            <div class="col-sm-6">
+                <div class="card bg-light h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Estatísticas de Series</h5>
+                        <p>Quantidade de Series Finalizadas: @qtdSerieFinalizadas</p>
+                        <p>Quantidade de Series que quero assistir: @qtdSerieQueroAssistir</p>
+                        <p>Quantidade de Episódios Visto: @qtdEpisodios </p>
+                        <p>Quantidade de Comentários feitos: @qtdComentarioEps</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card bg-light h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Estatísticas de Filmes</h5>
+                        <p>Quantidade de Filmes vistos: @qtdFilmes</p>
+                        <p>Quantidade de Comentários em Filmes: @qtdComentarioFilmes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+
+    private ApplicationUser user = new();
+    private string qtdSerieFinalizadas { get; set; }
+    private string qtdSerieQueroAssistir { get; set; }
+    private string qtdEpisodios { get; set; }
+    private string qtdComentarioEps { get; set; }
+    private string qtdFilmes { get; set; }
+    private string qtdComentarioFilmes { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
+        await loadFilmEstatistica();
+        await loadSerieEstatistica();
+    }
+
+    private async Task loadFilmEstatistica()
+    {
+        FilmLibrary fl = await http.GetFromJsonAsync<FilmLibrary>($"api/FilmLibraries/{user.Id}");
+
+        if (fl.FilmLibraryId == 0 && fl.UserId != user.Id)
+        {
+            qtdFilmes = "Sem informações";
+            qtdComentarioFilmes = "Sem Informações";
+        }
+        else
+        {
+            var reponse = await http.GetFromJsonAsync<int>($"api/FilmsOnLibraries/getQtdFilmesVisto/{fl.FilmLibraryId}");
+            qtdFilmes = reponse.ToString();
+
+            var response2 = await http.GetFromJsonAsync<int>($"api/FilmComments/getQtdCommentFilm/{user.Id}");
+            qtdComentarioFilmes = response2.ToString();
+
+        }
+    }
+
+    private async Task loadSerieEstatistica()
+    {
+        SerieLibrary sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+
+        if (sl.UserId != user.Id && sl.SerieLibraryId == 0)
+        {
+            qtdSerieFinalizadas = "Sem informações";
+            qtdSerieQueroAssistir = "Sem Informações";
+            qtdEpisodios = "Sem informações";
+            qtdComentarioEps = "Sem Informações";
+        }
+        else
+        {
+            var qfin = await http.GetFromJsonAsync<int>($"api/SerieOnLibraries/getQuantidadeSerie/{sl.SerieLibraryId}/{4}");
+            var qqass = await http.GetFromJsonAsync<int>($"api/SerieOnLibraries/getQuantidadeSerie/{sl.SerieLibraryId}/{2}");
+            qtdSerieFinalizadas = qfin.ToString();
+            qtdSerieQueroAssistir = qqass.ToString();
+
+            var seonli = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}");
+
+            List<EpisodeLibrary> epli = new();
+
+            foreach(var sol in seonli)
+            {
+                var response = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{sol.SerieOnLibraryId}");
+                epli.Add(response);
+            }
+
+            int quantidadeEps = 0;
+
+            foreach (var el in epli)
+            {
+                var response = await http.GetFromJsonAsync<int>($"api/EpisodeOnLibraries/getQtdEpLb/{el.EpisodeLibraryId}");
+                quantidadeEps += response;
+            }
+
+            qtdEpisodios = quantidadeEps.ToString();
+
+            var resposta = await http.GetFromJsonAsync<int>($"api/EpisodeComments/getQtdCommentEp/{user.Id}");
+            qtdComentarioEps = resposta.ToString();
+        }
+    }
+}
