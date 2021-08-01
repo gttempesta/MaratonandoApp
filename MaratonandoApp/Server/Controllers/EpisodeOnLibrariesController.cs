@@ -28,15 +28,23 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.EpisodeOnLibrary.ToListAsync();
         }
 
-        // GET: api/EpisodeOnLibraries/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EpisodeOnLibrary>> GetEpisodeOnLibrary(int id)
+        // GET: api/EpisodeOnLibraries
+        [HttpGet("GetEpisodesBySeriesChecked/{id}")]
+        public async Task<ActionResult<IEnumerable<EpisodeOnLibrary>>> GetEpisodesBySeriesChecked(int id)
         {
-            var episodeOnLibrary = await _context.EpisodeOnLibrary.FindAsync(id);
+            return await _context.EpisodeOnLibrary.Where<EpisodeOnLibrary>(eol => eol.EpisodeLibraryId == id).ToListAsync();
+        }
+
+        // GET: api/EpisodeOnLibraries/5
+        [HttpGet("getEpOnLib/{id}/{ideol}")]
+        public async Task<ActionResult<EpisodeOnLibrary>> getEpOnLib(int id, int ideol)
+        {
+            var episodeOnLibrary = await _context.EpisodeOnLibrary.FindAsync(ideol, id);
 
             if (episodeOnLibrary == null)
             {
-                return NotFound();
+                episodeOnLibrary = new();
+                return episodeOnLibrary;
             }
 
             return episodeOnLibrary;
@@ -44,10 +52,10 @@ namespace MaratonandoApp.Server.Controllers
 
         // PUT: api/EpisodeOnLibraries/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutEpisodeOnLibrary(int id, EpisodeOnLibrary episodeOnLibrary)
+        [HttpPut("{id}/{ideol}")]
+        public async Task<IActionResult> PutEpisodeOnLibrary(int id, int ideol, EpisodeOnLibrary episodeOnLibrary)
         {
-            if (id != episodeOnLibrary.EpisodeLibraryId)
+            if (ideol != episodeOnLibrary.EpisodeLibraryId && id != episodeOnLibrary.EpisodeId)
             {
                 return BadRequest();
             }
@@ -99,10 +107,10 @@ namespace MaratonandoApp.Server.Controllers
         }
 
         // DELETE: api/EpisodeOnLibraries/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEpisodeOnLibrary(int id)
+        [HttpDelete("{id}/{ideol}")]
+        public async Task<IActionResult> DeleteEpisodeOnLibrary(int id, int ideol)
         {
-            var episodeOnLibrary = await _context.EpisodeOnLibrary.FindAsync(id);
+            var episodeOnLibrary = await _context.EpisodeOnLibrary.FindAsync(ideol, id);
             if (episodeOnLibrary == null)
             {
                 return NotFound();

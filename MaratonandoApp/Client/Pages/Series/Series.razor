@@ -33,17 +33,18 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div>
-            <label for="selectStatus">Temporadas:</label>
-            <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarTemporada">
+    <div class="row mt-3">
+        <div class="col-8" style="margin: 0 auto">
+            <select id="selectStatus" class="btn btn-primary mr-3 browser-default custom-select" @onchange="mudarTemporada">
                 @foreach (var temporada in nroTemporadas)
                 {
                     <option value="@temporada" selected="@(@tempSel == temporada)">Temporada @temporada</option>
                 }
             </select>
         </div>
-        <div>
+    </div>
+    <div class="row mt-3 mb-5">
+        <div class="col-8" style="margin: 0 auto">
             @if (episodes == null)
             {
                 <p><em>Carregando...</em></p>
@@ -54,15 +55,18 @@
             }
             else
             {
-        <ul class="list-group">
-            @foreach (var episode in episodes)
-            {
-            <li class="list-group-item">
-                <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
-                @episode.nroEpisode) @episode.titulo
-            </li>
-            }
-        </ul>
+                <ul class="list-group">
+                    @foreach (var episode in episodes)
+                    {
+                        marcado = verificaMarcacao(episode);
+                    <li class="list-group-item">
+                        <div class="ml-4">
+                            <input class="form-check-input" id="@episode.EpisodeId" checked="@marcado" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
+                            <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a></label>
+                        </div>
+                    </li>
+                    }
+                </ul>
             }
 
         </div>
@@ -77,9 +81,12 @@
     private int statusAtual { get; set; } = 0;
     private string fave_button { get; set; } = "Marcar como favorito";
     private SerieOnLibrary SOL = new();
+    private EpisodeLibrary EPLIB = new();
+    private List<EpisodeOnLibrary> EOL = new();
     private List<int> nroTemporadas = new();
     private int tempSel { get; set; } = 1;
     private List<Episode> episodes = new();
+    private bool marcado { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -104,6 +111,10 @@
         ApplicationUser user = await http.GetFromJsonAsync<ApplicationUser>("api/account");
         SerieLibrary serielib = await carregarSerieLibrary(user);
         SOL = await carregarSerieOnLibrary(serielib);
+
+        EPLIB = await carregarEpisodioLibrary(SOL);
+
+        EOL = await carregarEpisodioOnLibraryBySerie();
 
         if (SOL.FlFavoritado)
             fave_button = "Favoritado";
@@ -167,6 +178,27 @@
         return sol;
     }
 
+    private async Task<EpisodeLibrary> carregarEpisodioLibrary(SerieOnLibrary solib)
+    {
+        var epl = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{solib.SerieOnLibraryId}");
+
+        if (epl.EpisodeLibraryId == 0 && epl.SerieOnLibraryId == 0)
+        {
+            epl.SerieOnLibraryId = solib.SerieOnLibraryId;
+
+            var response = await http.PostAsJsonAsync<EpisodeLibrary>("api/EpisodeLibraries", epl);
+
+            epl = await response.Content.ReadFromJsonAsync<EpisodeLibrary>();
+        }
+
+        return epl;
+    }
+
+    private async Task<List<EpisodeOnLibrary>> carregarEpisodioOnLibraryBySerie()
+    {
+        return await http.GetFromJsonAsync<List<EpisodeOnLibrary>>($"api/episodeOnLibraries/GetEpisodesBySeriesChecked/{EPLIB.EpisodeLibraryId}");
+    }
+
     private async Task marcarComoFavorito()
     {
         if (!SOL.FlFavoritado && SOL.SeriesStatus == 0)
@@ -212,5 +244,38 @@
             tempSel = id;
             await carregarEpisodiosTemporada();
         }
+    }
+
+    private async Task checkBoxClicado(Episode ep, object checkValue)
+    {
+        if ((bool)checkValue)
+        {
+            EpisodeOnLibrary novoEol = new();
+
+            novoEol.EpisodeLibraryId = EPLIB.EpisodeLibraryId;
+            novoEol.FlAssistido = true;
+            novoEol.NotaEpisodio = 0;
+            novoEol.EpisodeId = ep.EpisodeId;
+            novoEol.DataAssistido = DateTime.Now;
+
+            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+        }
+        else
+        {
+            var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{ep.EpisodeId}/{EPLIB.EpisodeLibraryId}");
+        }
+
+        EOL = await carregarEpisodioOnLibraryBySerie();
+        StateHasChanged();
+    }
+
+    private bool verificaMarcacao(Episode episode)
+    {
+        foreach (var epmarcado in EOL)
+        {
+            if (episode.EpisodeId == epmarcado.EpisodeId)
+                return true;
+        }
+        return false;
     }
 }

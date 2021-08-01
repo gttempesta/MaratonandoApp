@@ -1,0 +1,240 @@
+﻿@page "/seriescatalog/series/episodio/{epid:int}"
+@inject HttpClient http
+    <div>
+        <a href="/seriescatalog/series/@serie.SerieId" class="btn btn-link">Voltar</a>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-4">
+                <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
+            </div>
+            <div class="col-8">
+                <div>
+                    <h2>@serie.Titulo - @episodio.titulo</h2>
+                    <p><span style="font-weight: bold">Episódio:</span> @episodio.nroEpisode</p>
+                    <p><span style="font-weight: bold">Temporada:</span> @episodio.nroTemporada</p>
+                    <p><span style="font-weight: bold">Sinopse:</span> @episodio.sinopse.</p>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
+                        @check_button  <span class="oi oi-check"></span>
+                    </button>
+                    <div>
+                        <label for="selectNota">Avalie:</label>
+                        <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
+                            @foreach (var nota in notas)
+                            {
+                                <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-5 mb-2">
+            <div class="input-group mb-3 col-8" style="margin: 0 auto">
+                <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-8" style="margin: 0 auto">
+                @foreach (var comentario in episodeComments)
+                {
+                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" />
+                }
+            </div>
+        </div>
+    </div>
+@code {
+    [Parameter] public int epid { get; set; }
+    private ApplicationUser user { get; set; }
+    private Episode episodio = new();
+    private Serie serie = new();
+    private EpisodeOnLibrary EOL = new();
+    private EpisodeLibrary EPLIB = new();
+    private List<int> notas = new List<int>() { 0, 1, 2, 3, 4, 5 };
+    private int filmrate { get; set; } = 0;
+    private string check_button { get; set; } = "Marcar como visto";
+    private List<EpisodeComment> episodeComments = new();
+    private string novoComentario { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        episodio = await http.GetFromJsonAsync<Episode>($"api/Episodes/{epid}");
+        serie = await http.GetFromJsonAsync<Serie>($"api/Series/{episodio.SerieId}");
+
+        user = await http.GetFromJsonAsync<ApplicationUser>("api/account");
+        SerieLibrary serielib = await carregarSerieLibrary(user);
+        SerieOnLibrary SOL = await carregarSerieOnLibrary(serielib);
+
+        EPLIB = await carregarEpisodioLibrary(SOL);
+
+        EOL = await loadEpisodioOnLibrary(EPLIB);
+
+        if (EOL != null)
+        {
+            check_button = "Assistido";
+            filmrate = EOL.NotaEpisodio;
+        }
+
+        await carregarComentarios();
+    }
+
+    private async Task<SerieLibrary> carregarSerieLibrary(ApplicationUser user)
+    {
+        var sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+
+        if (sl.UserId == null && sl.SerieLibraryId == 0)
+        {
+            sl.UserId = user.Id;
+
+            var response = await http.PostAsJsonAsync<SerieLibrary>("api/SerieLibraries", sl);
+
+            sl = await response.Content.ReadFromJsonAsync<SerieLibrary>();
+        }
+
+        return sl;
+    }
+
+    private async Task<SerieOnLibrary> carregarSerieOnLibrary(SerieLibrary sl)
+    {
+        var sol = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{serie.SerieId}");
+
+        if (sol.SerieLibraryId == 0 && sol.SerieId == 0)
+        {
+            sol.SerieLibraryId = sl.SerieLibraryId;
+            sol.SerieId = serie.SerieId;
+            sol.SeriesStatus = 0;
+            sol.FlFavoritado = false;
+
+            var response = await http.PostAsJsonAsync<SerieOnLibrary>("api/SerieOnLibraries", sol);
+
+            sol = await response.Content.ReadFromJsonAsync<SerieOnLibrary>();
+        }
+
+        return sol;
+    }
+
+    private async Task<EpisodeLibrary> carregarEpisodioLibrary(SerieOnLibrary solib)
+    {
+        var epl = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{solib.SerieOnLibraryId}");
+
+        if (epl.EpisodeLibraryId == 0 && epl.SerieOnLibraryId == 0)
+        {
+            epl.SerieOnLibraryId = solib.SerieOnLibraryId;
+
+            var response = await http.PostAsJsonAsync<EpisodeLibrary>("api/EpisodeLibraries", epl);
+
+            epl = await response.Content.ReadFromJsonAsync<EpisodeLibrary>();
+        }
+
+        return epl;
+    }
+
+    private async Task<EpisodeOnLibrary> loadEpisodioOnLibrary(EpisodeLibrary elib)
+    {
+        var epOnLibrary = await http.GetFromJsonAsync<EpisodeOnLibrary>($"api/EpisodeOnLibraries/getEpOnLib/{epid}/{elib.EpisodeLibraryId}");
+
+        if (epOnLibrary.EpisodeLibraryId == elib.EpisodeLibraryId && epOnLibrary.EpisodeId == epid)
+        {
+            return epOnLibrary;
+        }
+
+        return null;
+    }
+
+    private async Task marcarComoVisto()
+    {
+        if (EOL == null)
+        {
+            EOL = new();
+            EOL.EpisodeId = episodio.EpisodeId;
+            EOL.EpisodeLibraryId = EPLIB.EpisodeLibraryId;
+            EOL.FlAssistido = true;
+            EOL.NotaEpisodio = 0;
+            EOL.DataAssistido = DateTime.Now;
+
+            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", EOL);
+
+            if (response.IsSuccessStatusCode)
+            {
+                check_button = "Assistido";
+            }
+        }
+        else
+        {
+            var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{EOL.EpisodeId}/{EOL.EpisodeLibraryId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                EOL = null;
+                check_button = "Marcar como Visto";
+                filmrate = 0;
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task avaliarFilme(ChangeEventArgs e)
+    {
+        filmrate = Int32.Parse(e.Value.ToString());
+
+        if (EOL == null)
+        {
+            EOL = new();
+            EOL.EpisodeId = episodio.EpisodeId;
+            EOL.EpisodeLibraryId = EPLIB.EpisodeLibraryId;
+            EOL.FlAssistido = true;
+            EOL.NotaEpisodio = filmrate;
+            EOL.DataAssistido = DateTime.Now;
+
+            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", EOL);
+
+            if (response.IsSuccessStatusCode)
+            {
+                check_button = "Assistido";
+            }
+        }
+        else
+        {
+            EOL.NotaEpisodio = filmrate;
+
+            var response = await http.PutAsJsonAsync<EpisodeOnLibrary>($"api/EpisodeOnLibraries/{EOL.EpisodeId}/{EOL.EpisodeLibraryId}", EOL);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task salvarComentario()
+    {
+        if (!string.IsNullOrEmpty(novoComentario))
+        {
+            EpisodeComment ecom = new();
+            ecom.ApplicationUserId = user.Id;
+            ecom.Comment = novoComentario;
+            ecom.CreatedAt = DateTime.Now;
+            ecom.EpisodeId = episodio.EpisodeId;
+            ecom.CreatedBy = user.UserName;
+
+            var response = await http.PostAsJsonAsync<EpisodeComment>("api/EpisodeComments", ecom);
+
+            if (response.IsSuccessStatusCode)
+            {
+                novoComentario = "";
+                await carregarComentarios();
+            }
+
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task carregarComentarios()
+    {
+        episodeComments = await http.GetFromJsonAsync<List<EpisodeComment>>($"api/EpisodeComments/GetCommentsCommentByEp/{episodio.EpisodeId}");
+    }
+}

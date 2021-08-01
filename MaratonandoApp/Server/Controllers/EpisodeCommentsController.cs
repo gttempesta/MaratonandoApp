@@ -28,6 +28,25 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.EpisodeComment.ToListAsync();
         }
 
+        // GET: api/EpisodeComments/GetCommentsCommentByEp
+        [HttpGet("GetCommentsCommentByEp/{id}")]
+        public async Task<ActionResult<IEnumerable<EpisodeComment>>> GetCommentsCommentByEp(int id)
+        {
+            List<EpisodeComment> episodeComments = await _context.EpisodeComment.ToListAsync();
+
+            List<EpisodeComment> episodeCommentsbySpec = new();
+
+            foreach (var ec in episodeComments)
+            {
+                if (ec.EpisodeId == id)
+                {
+                    episodeCommentsbySpec.Add(ec);
+                }
+            }
+
+            return episodeCommentsbySpec;
+        }
+
         // GET: api/EpisodeComments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EpisodeComment>> GetEpisodeComment(int id)
