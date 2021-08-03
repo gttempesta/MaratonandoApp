@@ -28,6 +28,34 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <h5>Próximos episódios para assistir</h5>
+        <div class="col-8" style="margin: 0 auto">
+            @if (episodes == null)
+            {
+                <p><em>Carregando...</em></p>
+            }
+            else if (episodes.Count == 0)
+            {
+                <p><em>Sem episódios cadastrados...</em></p>
+            }
+            else
+            {
+                <ul class="list-group">
+                    @foreach (var episode in episodes)
+                    {
+                        <li class="list-group-item">
+                            <div class="ml-4">
+                                <input class="form-check-input" id="@episode.EpisodeId" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
+                                <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a></label>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+
+        </div>
+    </div>
 </div>
 
 @code{
@@ -39,12 +67,18 @@
     private string qtdComentarioEps { get; set; }
     private string qtdFilmes { get; set; }
     private string qtdComentarioFilmes { get; set; }
+    private SerieLibrary sl = new();
+    private List<Episode> episodes = new();
+    private bool marcado { get; set; }
+
+    bool teste { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
         user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
         await loadFilmEstatistica();
         await loadSerieEstatistica();
+        await carregaProxEpsParaAssistir();
     }
 
     private async Task loadFilmEstatistica()
@@ -69,7 +103,7 @@
 
     private async Task loadSerieEstatistica()
     {
-        SerieLibrary sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+        sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
 
         if (sl.UserId != user.Id && sl.SerieLibraryId == 0)
         {
@@ -108,5 +142,77 @@
             var resposta = await http.GetFromJsonAsync<int>($"api/EpisodeComments/getQtdCommentEp/{user.Id}");
             qtdComentarioEps = resposta.ToString();
         }
+    }
+
+    private async Task carregaProxEpsParaAssistir()
+    {
+        var serieOnLib = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASLAssist/{sl.SerieLibraryId}");
+
+
+        List<EpisodeLibrary> eplibload = new();
+
+        foreach (var sonlib in serieOnLib)
+        {
+            var response = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{sonlib.SerieOnLibraryId}");
+            eplibload.Add(response);
+        }
+
+        foreach(var eplibvar in eplibload)
+        {
+            var listEOL = await http.GetFromJsonAsync<List<EpisodeOnLibrary>>($"api/EpisodeOnLibraries/GetEpisodesBySeriesChecked/{eplibvar.EpisodeLibraryId}");
+            var responseEOL = await http.GetFromJsonAsync<EpisodeOnLibrary>($"api/EpisodeOnLibraries/GetEpisodeLastWatched/{eplibvar.EpisodeLibraryId}");
+
+            var serie = await http.GetFromJsonAsync<Episode>($"api/Episodes/{responseEOL.EpisodeId}");
+
+            var epsserieX = await http.GetFromJsonAsync<List<Episode>>($"api/Episodes/serie/{serie.SerieId}");
+
+            bool tem = false;
+
+            foreach (var epsserie in epsserieX)
+            {
+                foreach (var eol in listEOL)
+                {
+                    if (eol.EpisodeId == epsserie.EpisodeId)
+                    {
+                        tem = true;
+                    }
+                    tem = false;
+                }
+
+                if (!tem)
+                {
+                    episodes.Add(epsserie);
+                    break;
+                }
+            }
+
+            teste = false;
+        }
+    }
+
+    private async Task checkBoxClicado(Episode ep, object checkValue)
+    {
+        var addSOL = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{ep.SerieId}");
+        var addEL = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{addSOL.SerieOnLibraryId}");
+        if ((bool)checkValue)
+        {
+            EpisodeOnLibrary novoEol = new();
+
+            novoEol.EpisodeLibraryId = addEL.EpisodeLibraryId;
+            novoEol.FlAssistido = true;
+            novoEol.NotaEpisodio = 0;
+            novoEol.EpisodeId = ep.EpisodeId;
+            novoEol.DataAssistido = DateTime.Now;
+
+            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+        }
+        else
+        {
+            var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{ep.EpisodeId}/{addEL.EpisodeLibraryId}");
+        }
+
+        episodes = new List<Episode>();
+        await carregaProxEpsParaAssistir();
+        StateHasChanged();
     }
 }

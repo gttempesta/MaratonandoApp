@@ -64,6 +64,24 @@ namespace MaratonandoApp.Server.Controllers
             return seriesonlib;
         }
 
+        // GET: api/SerieOnLibraries/getSerieOnLibraryWithASL/id
+        [HttpGet("getSerieOnLibraryWithASLAssist/{id}")]
+        public async Task<ActionResult<IEnumerable<SerieOnLibrary>>> getSerieOnLibraryWithASLAssist(int id)
+        {
+            var response = await _context.SerieOnLibrary.ToListAsync();
+            List<SerieOnLibrary> seriesonlib = new();
+
+            foreach (var sol in response)
+            {
+                if (sol.SerieLibraryId == id && sol.SeriesStatus == 1)
+                {
+                    seriesonlib.Add(sol);
+                }
+            }
+
+            return seriesonlib;
+        }
+
         // GET: api/SerieOnLibraries/getQuantidadeSerie/id
         [HttpGet("getQuantidadeSerie/{id}/{status}")]
         public async Task<ActionResult<int>> getQuantidadeSerie(int id, int status)

@@ -28,13 +28,34 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.EpisodeOnLibrary.ToListAsync();
         }
 
-        // GET: api/EpisodeOnLibraries
+        // GET: api/EpisodeOnLibraries/GetEpisodesBySeriesChecked/id
         [HttpGet("GetEpisodesBySeriesChecked/{id}")]
         public async Task<ActionResult<IEnumerable<EpisodeOnLibrary>>> GetEpisodesBySeriesChecked(int id)
         {
             return await _context.EpisodeOnLibrary.Where<EpisodeOnLibrary>(eol => eol.EpisodeLibraryId == id).ToListAsync();
         }
 
+
+        // GET: api/EpisodeOnLibraries/GetEpisodeLastWatched/id
+        [HttpGet("GetEpisodeLastWatched/{id}")]
+        public async Task<ActionResult<EpisodeOnLibrary>> GetEpisodeLastWatched(int id)
+        {
+            var response = await _context.EpisodeOnLibrary.Where<EpisodeOnLibrary>(eol => eol.EpisodeLibraryId == id).ToListAsync();
+            EpisodeOnLibrary eol = new();
+
+            DateTime dt = new DateTime(1900, 01, 01, 0, 0, 0);
+
+            foreach (var res in response)
+            {
+                if (DateTime.Compare(dt, res.DataAssistido) < 0)
+                {
+                    dt = res.DataAssistido;
+                    eol = res;
+                }
+            }
+
+            return eol;
+        }
         // GET: api/EpisodeOnLibraries/5
         [HttpGet("getEpOnLib/{id}/{ideol}")]
         public async Task<ActionResult<EpisodeOnLibrary>> getEpOnLib(int id, int ideol)
