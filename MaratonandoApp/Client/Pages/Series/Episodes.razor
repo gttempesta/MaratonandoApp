@@ -43,8 +43,14 @@
             <div class="col-8" style="margin: 0 auto">
                 @foreach (var comentario in episodeComments)
                 {
-                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" />
-                }
+                    @if (user.Id == comentario.ApplicationUserId)
+                    {
+                        <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
+                    }
+                    else
+                    {
+                        <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
+                    }}
             </div>
         </div>
     </div>
@@ -236,5 +242,17 @@
     private async Task carregarComentarios()
     {
         episodeComments = await http.GetFromJsonAsync<List<EpisodeComment>>($"api/EpisodeComments/GetCommentsCommentByEp/{episodio.EpisodeId}");
+        episodeComments.Reverse();
+    }
+
+    private async Task deletaComentario(int idComentario)
+    {
+        var response = await http.DeleteAsync($"api/EpisodeComments/{idComentario}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await carregarComentarios();
+            StateHasChanged();
+        }
     }
 }

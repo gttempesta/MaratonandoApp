@@ -1,14 +1,25 @@
-﻿<div class="card mb-2">
+﻿@inject HttpClient http
+
+<div class="card mb-2" id="@idComentario">
     <div class="card-header">
         @Autor | @CriadoEm.ToShortDateString()
     </div>
     <div class="card-body">
         <p class="card-text">@Comment</p>
+        @if (Excluir)
+        {
+           <button @onclick=@(() => OnClick.InvokeAsync(idComentario)) class="btn btn-primary btn-sm">Excluir</button>
+        }
     </div>
+
 </div>
 
 @code {
     [Parameter] public string Autor { get; set; }
     [Parameter] public string Comment { get; set; }
+    [Parameter] public int idComentario { get; set; }
     [Parameter] public DateTime CriadoEm { get; set; }
+    [Parameter] public bool Excluir { get; set; } = false;
+    [Parameter] public EventCallback<int> OnClick { get; set; }
+
 }

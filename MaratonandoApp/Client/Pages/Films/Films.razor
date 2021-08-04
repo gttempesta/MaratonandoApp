@@ -76,7 +76,14 @@
         <div class="col-8" style="margin: 0 auto">
             @foreach (var comentario in filmComments)
             {
-                <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt"/>
+                @if (user.Id == comentario.ApplicationUserId)
+                {
+                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
+                }
+                else
+                {
+                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
+                }
             }
         </div>
     </div>
@@ -306,5 +313,17 @@
     private async Task carregarComentarios()
     {
         filmComments = await http.GetFromJsonAsync<List<FilmComment>>($"api/FilmComments/GetFilmCommentByFilm/{filmid}");
+        filmComments.Reverse();
+    }
+
+    private async Task deletaComentario(int idComentario)
+    {
+        var response = await http.DeleteAsync($"api/FilmComments/{idComentario}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await carregarComentarios();
+            StateHasChanged();
+        }
     }
 }

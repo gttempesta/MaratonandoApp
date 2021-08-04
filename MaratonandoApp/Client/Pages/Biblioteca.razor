@@ -1,0 +1,377 @@
+﻿@page "/biblioteca"
+@inject HttpClient http
+@attribute [Authorize]
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Bem-vindo, @user.UserName</h1>
+
+        <div class="container mt-3">
+            <div class="row">
+                <div class="card-group col-12">
+                    <div class="col-sm-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Estatísticas de Series</h5>
+                                <p>Quantidade de Series Finalizadas: @qtdSerieFinalizadas</p>
+                                <p>Quantidade de Series que quero assistir: @qtdSerieQueroAssistir</p>
+                                <p>Quantidade de Episódios Visto: @qtdEpisodios </p>
+                                <p>Quantidade de Comentários feitos: @qtdComentarioEps</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Estatísticas de Filmes</h5>
+                                <p>Quantidade de Filmes vistos: @qtdFilmes</p>
+                                <p>Quantidade de Comentários em Filmes: @qtdComentarioFilmes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3 mb-2">
+                <h5>Próximos episódios para assistir</h5>
+            </div>
+            <div class="row mb-5">
+                <div class="col-12" style="margin: 0 auto">
+                    @if (episodes == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (episodes.Count == 0)
+                    {
+                        <p><em>Sem episódios cadastrados...</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var episode in episodes)
+                            {
+                                var item = seriesAssistindo.Find(s => s.SerieId == episode.SerieId);
+                                <li class="list-group-item">
+                                    <div class="ml-4">
+                                        <input class="form-check-input" id="@episode.EpisodeId" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
+                                        <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a> - @item.Titulo </label>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                </div>
+            </div>
+            <div class="row">
+                <h3>Series</h3>
+            </div>
+            <div class="row mt-3">
+                <h5>Assistindo</h5>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12" style="margin:0 auto">
+                    @if (seriesAssistindo == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (seriesAssistindo.Count == 0)
+                    {
+                        <p><em>Nenhuma série marcada como assistindo</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var assistindo in seriesAssistindo)
+                            {
+                                <li class="list-group-item" id="@assistindo.SerieId">
+                                    <a href="/seriescatalog/series/@assistindo.SerieId">@assistindo.Titulo</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+            <div class="row mt-3">
+                <h5>Finalizada</h5>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12" style="margin:0 auto">
+                    @if (seriesFinalizada == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (seriesFinalizada.Count == 0)
+                    {
+                        <p><em>Nenhuma série marcada como assistindo</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var finalizada in seriesFinalizada)
+                            {
+                                <li class="list-group-item" id="@finalizada.SerieId">
+                                    <a href="/seriescatalog/series/@finalizada.SerieId">@finalizada.Titulo</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+            <div class="row mt-3">
+                <h5>Quero Assistir</h5>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12" style="margin:0 auto">
+                    @if (seriesQueroVer == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (seriesQueroVer.Count == 0)
+                    {
+                        <p><em>Nenhuma série marcada como assistindo</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var querover in seriesQueroVer)
+                            {
+                                <li class="list-group-item" id="@querover.SerieId">
+                                    <a href="/seriescatalog/series/@querover.SerieId">@querover.Titulo</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+            <div class="row mt-3">
+                <h5>Abandonei</h5>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12" style="margin:0 auto">
+                    @if (seriesAbandonada == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (seriesAbandonada.Count == 0)
+                    {
+                        <p><em>Nenhuma série marcada como assistindo</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var abandonada in seriesAbandonada)
+                            {
+                                <li class="list-group-item" id="@abandonada.SerieId">
+                                    <a href="/seriescatalog/series/@abandonada.SerieId">@abandonada.Titulo</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <h1>Se autentique antes de entrar aqui.</h1>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code{
+
+    private ApplicationUser user = new();
+    private string qtdSerieFinalizadas { get; set; }
+    private string qtdSerieQueroAssistir { get; set; }
+    private string qtdEpisodios { get; set; }
+    private string qtdComentarioEps { get; set; }
+    private string qtdFilmes { get; set; }
+    private string qtdComentarioFilmes { get; set; }
+    private SerieLibrary sl = new();
+    private List<Episode> episodes = new();
+    private List<Serie> seriesAssistindo = new();
+    private List<Serie> seriesFinalizada = new();
+    private List<Serie> seriesQueroVer = new();
+    private List<Serie> seriesAbandonada = new();
+
+    bool teste { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
+        await loadFilmEstatistica();
+        await loadSerieEstatistica();
+        await carregaProxEpsParaAssistir();
+        await carregarSeriesAssistindo();
+        await carregarSeriesFinalizada();
+        await carregarSeriesQueroVer();
+        await carregarSeriesAbandonada();
+    }
+
+    private async Task loadFilmEstatistica()
+    {
+        FilmLibrary fl = await http.GetFromJsonAsync<FilmLibrary>($"api/FilmLibraries/{user.Id}");
+
+        if (fl.FilmLibraryId == 0 && fl.UserId != user.Id)
+        {
+            qtdFilmes = "Sem informações";
+            qtdComentarioFilmes = "Sem Informações";
+        }
+        else
+        {
+            var reponse = await http.GetFromJsonAsync<int>($"api/FilmsOnLibraries/getQtdFilmesVisto/{fl.FilmLibraryId}");
+            qtdFilmes = reponse.ToString();
+
+            var response2 = await http.GetFromJsonAsync<int>($"api/FilmComments/getQtdCommentFilm/{user.Id}");
+            qtdComentarioFilmes = response2.ToString();
+
+        }
+    }
+
+    private async Task loadSerieEstatistica()
+    {
+        sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+
+        if (sl.UserId != user.Id && sl.SerieLibraryId == 0)
+        {
+            qtdSerieFinalizadas = "Sem informações";
+            qtdSerieQueroAssistir = "Sem Informações";
+            qtdEpisodios = "Sem informações";
+            qtdComentarioEps = "Sem Informações";
+        }
+        else
+        {
+            var qfin = await http.GetFromJsonAsync<int>($"api/SerieOnLibraries/getQuantidadeSerie/{sl.SerieLibraryId}/{4}");
+            var qqass = await http.GetFromJsonAsync<int>($"api/SerieOnLibraries/getQuantidadeSerie/{sl.SerieLibraryId}/{2}");
+            qtdSerieFinalizadas = qfin.ToString();
+            qtdSerieQueroAssistir = qqass.ToString();
+
+            var seonli = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}");
+
+            List<EpisodeLibrary> epli = new();
+
+            foreach (var sol in seonli)
+            {
+                var response = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{sol.SerieOnLibraryId}");
+                epli.Add(response);
+            }
+
+            int quantidadeEps = 0;
+
+            foreach (var el in epli)
+            {
+                var response = await http.GetFromJsonAsync<int>($"api/EpisodeOnLibraries/getQtdEpLb/{el.EpisodeLibraryId}");
+                quantidadeEps += response;
+            }
+
+            qtdEpisodios = quantidadeEps.ToString();
+
+            var resposta = await http.GetFromJsonAsync<int>($"api/EpisodeComments/getQtdCommentEp/{user.Id}");
+            qtdComentarioEps = resposta.ToString();
+        }
+    }
+
+    private async Task carregaProxEpsParaAssistir()
+    {
+        var serieOnLib = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{1}");
+
+
+        List<EpisodeLibrary> eplibload = new();
+
+        foreach (var sonlib in serieOnLib)
+        {
+            var response = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{sonlib.SerieOnLibraryId}");
+            eplibload.Add(response);
+        }
+
+        foreach (var eplibvar in eplibload)
+        {
+            var listEOL = await http.GetFromJsonAsync<List<EpisodeOnLibrary>>($"api/EpisodeOnLibraries/GetEpisodesBySeriesChecked/{eplibvar.EpisodeLibraryId}");
+            Episode serie = await http.GetFromJsonAsync<Episode>($"api/Episodes/{listEOL[0].EpisodeId}");
+
+            List<Episode> TodosEpisodios = await http.GetFromJsonAsync<List<Episode>>($"api/Episodes/serie/{serie.SerieId}");
+
+            foreach (var visto in listEOL)
+            {
+                var item = TodosEpisodios.Find(i => i.EpisodeId == visto.EpisodeId);
+                TodosEpisodios.Remove(item);
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                episodes.Add(TodosEpisodios[i]);
+            }
+
+        }
+    }
+
+    private async Task checkBoxClicado(Episode ep, object checkValue)
+    {
+        var addSOL = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{ep.SerieId}");
+        var addEL = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{addSOL.SerieOnLibraryId}");
+        if ((bool)checkValue)
+        {
+            EpisodeOnLibrary novoEol = new();
+
+            novoEol.EpisodeLibraryId = addEL.EpisodeLibraryId;
+            novoEol.FlAssistido = true;
+            novoEol.NotaEpisodio = 0;
+            novoEol.EpisodeId = ep.EpisodeId;
+            novoEol.DataAssistido = DateTime.Now;
+
+            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+        }
+        else
+        {
+            var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{ep.EpisodeId}/{addEL.EpisodeLibraryId}");
+        }
+
+        episodes = new List<Episode>();
+        await carregaProxEpsParaAssistir();
+        StateHasChanged();
+    }
+
+    private async Task carregarSeriesAssistindo()
+    {
+        var seriesStatusAssistindo = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{1}");
+
+        foreach(var assistindo in seriesStatusAssistindo)
+        {
+            var response = await http.GetFromJsonAsync<Serie>($"api/Series/{assistindo.SerieId}");
+            seriesAssistindo.Add(response);
+        }
+    }
+
+    private async Task carregarSeriesFinalizada()
+    {
+        var seriesStatusFinalizada = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{4}");
+
+        foreach (var finalizada in seriesStatusFinalizada)
+        {
+            var response = await http.GetFromJsonAsync<Serie>($"api/Series/{finalizada.SerieId}");
+            seriesFinalizada.Add(response);
+        }
+    }
+
+    private async Task carregarSeriesQueroVer()
+    {
+        var seriesStatusQueroVer = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{2}");
+
+        foreach (var querover in seriesStatusQueroVer)
+        {
+            var response = await http.GetFromJsonAsync<Serie>($"api/Series/{querover.SerieId}");
+            seriesQueroVer.Add(response);
+        }
+    }
+
+    private async Task carregarSeriesAbandonada()
+    {
+        var seriesStatusAbandonada = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{3}");
+
+        foreach (var abandonado in seriesStatusAbandonada)
+        {
+            var response = await http.GetFromJsonAsync<Serie>($"api/Series/{abandonado.SerieId}");
+            seriesAbandonada.Add(response);
+        }
+    }
+
+}
