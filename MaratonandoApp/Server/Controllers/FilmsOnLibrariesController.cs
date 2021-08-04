@@ -42,6 +42,23 @@ namespace MaratonandoApp.Server.Controllers
             return filmsOnLibrary;
         }
 
+        // GET: api/FilmsOnLibraries/getFilmLibrary/id/idf
+        [HttpGet("getFilmLibrary/{id}/{idf}")]
+        public async Task<ActionResult<FilmsOnLibrary>> getFilmLibrary(int id, int idf)
+        {
+            var filmsOnLibrary = await _context.FilmsOnLibraries.ToListAsync();
+
+            foreach(var fol in filmsOnLibrary)
+            {
+                if (fol.FilmLibraryId == id && fol.FilmId == idf)
+                {
+                    return fol;
+                }
+            }
+
+            return new FilmsOnLibrary();
+        }
+
         // GET: api/FilmsOnLibraries
         [HttpGet("getQtdFilmesVisto/{id}")]
         public async Task<ActionResult<int>> getQtdFilmesVisto(int id)
@@ -117,10 +134,10 @@ namespace MaratonandoApp.Server.Controllers
         }
 
         // DELETE: api/FilmsOnLibraries/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFilmsOnLibrary(int id)
+        [HttpDelete("{id}/{idfl}")]
+        public async Task<IActionResult> DeleteFilmsOnLibrary(int id, int idfl)
         {
-            var filmsOnLibrary = await _context.FilmsOnLibraries.FindAsync(id);
+            var filmsOnLibrary = await _context.FilmsOnLibraries.FindAsync(idfl, id);
             if (filmsOnLibrary == null)
             {
                 return NotFound();

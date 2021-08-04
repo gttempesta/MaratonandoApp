@@ -102,13 +102,10 @@
     private int filmrate { get; set; } = 0;
     private string novoComentario { get; set; }
 
-    protected async override Task OnParametersSetAsync()
-    {
-        film = await http.GetFromJsonAsync<Film>($"api/films/{filmid}");
-    }
-
     protected async override Task OnInitializedAsync()
     {
+        film = await http.GetFromJsonAsync<Film>($"api/films/{filmid}");
+
         user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
 
         filmlib = await loadFilmLibrary(user);
@@ -130,41 +127,26 @@
 
     private async Task<FilmLibrary> loadFilmLibrary(ApplicationUser user)
     {
-        List<FilmLibrary> filmsLibraries = await http.GetFromJsonAsync<List<FilmLibrary>>("api/filmlibraries/");
-        FilmLibrary libraryadd = new FilmLibrary();
-        bool existe = false;
+        var fl = await http.GetFromJsonAsync<FilmLibrary>($"api/filmlibraries/{user.Id}");
 
-        foreach (var filmlibrary in filmsLibraries)
+        if (fl.UserId == null && fl.FilmLibraryId == 0)
         {
-            if (filmlibrary.UserId.Equals(user.Id))
-            {
-                existe = true;
-                return filmlibrary;
-            }
+            fl.UserId = user.Id;
+
+            var response = await http.PostAsJsonAsync<FilmLibrary>("api/filmlibraries", fl);
+            fl = await response.Content.ReadFromJsonAsync<FilmLibrary>();
         }
 
-        if (!existe)
-        {
-            libraryadd.UserId = user.Id;
-            var response = await http.PostAsJsonAsync<FilmLibrary>("api/filmlibraries", libraryadd);
-
-            libraryadd = await response.Content.ReadFromJsonAsync<FilmLibrary>();
-        }
-
-        return libraryadd;
+        return fl;
     }
 
     private async Task<FilmsOnLibrary> loadFilmOnLibrary(FilmLibrary filmLibrary)
     {
-        List<FilmsOnLibrary> filmsOnLibraries = await http.GetFromJsonAsync<List<FilmsOnLibrary>>("api/FilmsOnLibraries/");
-        FilmsOnLibrary filmsOnLibrary = new FilmsOnLibrary();
+        var retornoFOL = await http.GetFromJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/getFilmLibrary/{filmLibrary.FilmLibraryId}/{filmid}");
 
-        foreach (var folibrary in filmsOnLibraries)
+        if (retornoFOL.FilmLibraryId == filmLibrary.FilmLibraryId && retornoFOL.FilmId == filmid)
         {
-            if (folibrary.FilmLibraryId.Equals(filmLibrary.FilmLibraryId) && folibrary.FilmId.Equals(filmid))
-            {
-                return folibrary;
-            }
+            return retornoFOL;
         }
 
         return null;
@@ -174,7 +156,7 @@
     {
         if (fol == null)
         {
-            fol = new FilmsOnLibrary();
+            fol = new();
             fol.FilmLibraryId = filmlib.FilmLibraryId;
             fol.FilmId = film.FilmId;
             fol.FlAssistido = true;
@@ -182,47 +164,34 @@
             fol.NotaFilme = 0;
             fol.DataAssistido = DateTime.Now;
 
-            await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", fol);
+            var reponse = await http.PostAsJsonAsync<FilmsOnLibrary>("api/FilmsOnLibraries", fol);
 
-            check_button = "Assistido";
+            if (reponse.IsSuccessStatusCode)
+            {
+                check_button = "Assistido";
+            }
 
         }
         else
         {
-            if (fol.FlAssistido)
+            var reponse = await http.DeleteAsync($"api/FilmsOnLibraries/{fol.FilmId}/{fol.FilmLibraryId}");
+
+            if (reponse.IsSuccessStatusCode)
             {
-                fol.FlAssistido = false;
-                fol.FlFavorito = false;
-                fol.NotaFilme = 0;
+                fol = null;
+                check_button = "Marcar como visto";
+                fave_button = "Marcar como Favorito";
                 filmrate = 0;
-
-                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
-                if (response.IsSuccessStatusCode)
-                {
-                    check_button = "Marcar como visto";
-                }
-
-            }
-            else
-            {
-                fol.FlAssistido = true;
-                fol.DataAssistido = DateTime.Now;
-
-                var response = await http.PutAsJsonAsync<FilmsOnLibrary>($"api/FilmsOnLibraries/{fol.FilmLibraryId}", fol);
-                if (response.IsSuccessStatusCode)
-                {
-                    check_button = "Assistido";
-                }
-
             }
         }
+        StateHasChanged();
     }
 
     private async Task marcarComoFavorito()
     {
         if (fol == null)
         {
-            fol = new FilmsOnLibrary();
+            fol = new();
             fol.FilmLibraryId = filmlib.FilmLibraryId;
             fol.FilmId = film.FilmId;
             fol.FlAssistido = true;

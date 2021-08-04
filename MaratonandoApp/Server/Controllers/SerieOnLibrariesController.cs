@@ -28,22 +28,21 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.SerieOnLibrary.ToListAsync();
         }
 
-        // GET: api/SerieOnLibraries/getSerieLibrary/id
+        // GET: api/SerieOnLibraries/getSerieLibrary/ids
         [HttpGet("getSerieLibrary/{id}/{ids}")]
         public async Task<ActionResult<SerieOnLibrary>> getSerieLibrary(int id, int ids)
         {
             var seriesOnLibraries = await _context.SerieOnLibrary.ToListAsync();
-            SerieOnLibrary serieonlib = new();
 
             foreach (var sol in seriesOnLibraries)
             {
                 if (sol.SerieLibraryId == id && sol.SerieId == ids)
                 {
-                    serieonlib = sol;
+                    return sol;
                 }
             }
 
-            return serieonlib;
+            return new SerieOnLibrary();
         }
 
         // GET: api/SerieOnLibraries/getSerieOnLibraryWithASL/id
