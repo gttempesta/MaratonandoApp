@@ -28,6 +28,20 @@ namespace MaratonandoApp.Server.Controllers
             return await _context.FilmsOnLibraries.ToListAsync();
         }
 
+        // GET: api/FilmsOnLibraries/GetFOLWithFL/1
+        [HttpGet("GetFOLWithFL/{id}")]
+        public async Task<ActionResult<IEnumerable<FilmsOnLibrary>>> GetFOLWithFL(int id)
+        {
+            return await _context.FilmsOnLibraries.Where<FilmsOnLibrary>(fol => fol.FilmLibraryId == id).ToListAsync();
+        }
+
+        // GET: api/FilmsOnLibraries/GetFilmsOnLibrariesByFLFave/1
+        [HttpGet("GetFilmsOnLibrariesByFLFave/{id}")]
+        public async Task<ActionResult<IEnumerable<FilmsOnLibrary>>> GetFilmsOnLibrariesByFLFave(int id)
+        {
+            return await _context.FilmsOnLibraries.Where<FilmsOnLibrary>(fol => fol.FilmLibraryId == id && fol.FlFavorito).ToListAsync();
+        }
+
         // GET: api/FilmsOnLibraries/5
         [HttpGet("{id}")]
         public async Task<ActionResult<FilmsOnLibrary>> GetFilmsOnLibrary(int id)

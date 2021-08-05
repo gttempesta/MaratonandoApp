@@ -31,93 +31,101 @@
                     </div>
                 </div>
             </div>
-            <div class="row mt-3 mb-2">
-                <h5>Próximos episódios para assistir</h5>
+            <div class="row mt-2 mb-3">
+                <div class="col-8" style="margin: 0 auto;">
+                    <select id="selectBiblioteca" class="mr-3 browser-default custom-select" @onchange="mudarDados">
+                        <option value="Serie" selected="@(tipoSelecionado.Equals("Serie"))">Biblioteca de Series</option>
+                        <option value="Filme" selected="@(tipoSelecionado.Equals("Filme"))">Biblioteca de Filmes</option>
+                    </select>
+                </div>
             </div>
-            <div class="row mb-5">
-                <div class="col-12" style="margin: 0 auto">
-                    @if (episodes == null)
-                    {
-                        <p><em>Carregando...</em></p>
-                    }
-                    else if (episodes.Count == 0)
-                    {
-                        <p><em>Sem episódios cadastrados...</em></p>
-                    }
-                    else
-                    {
-                        <ul class="list-group">
-                            @foreach (var episode in episodes)
-                            {
-                                var item = seriesAssistindo.Find(s => s.SerieId == episode.SerieId);
-                                <li class="list-group-item">
-                                    <div class="ml-4">
-                                        <input class="form-check-input" id="@episode.EpisodeId" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
-                                        <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a> - @item.Titulo </label>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
 
+            @if (tipoSelecionado.Equals("Serie"))
+            {
+                <div class="row mt-3 mb-2">
+                    <h5>Próximos episódios para assistir</h5>
                 </div>
-            </div>
-            <div class="row">
-                <h3>Series</h3>
-            </div>
-            <div class="row mt-3">
-                <h5>Assistindo</h5>
-            </div>
-            <div class="row mb-2">
-                <div class="col-12" style="margin:0 auto">
-                    @if (seriesAssistindo == null)
-                    {
-                        <p><em>Carregando...</em></p>
-                    }
-                    else if (seriesAssistindo.Count == 0)
-                    {
-                        <p><em>Nenhuma série marcada como assistindo</em></p>
-                    }
-                    else
-                    {
-                        <ul class="list-group">
-                            @foreach (var assistindo in seriesAssistindo)
-                            {
-                                <li class="list-group-item" id="@assistindo.SerieId">
-                                    <a href="/seriescatalog/series/@assistindo.SerieId">@assistindo.Titulo</a>
-                                </li>
-                            }
-                        </ul>
-                    }
+                <div class="row mb-5">
+                    <div class="col-12" style="margin: 0 auto">
+                        @if (episodes == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (episodes.Count == 0)
+                        {
+                            <p><em>Sem episódios cadastrados...</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var episode in episodes)
+                                {
+                                    var item = seriesAssistindo.Find(s => s.SerieId == episode.SerieId);
+                                    <li class="list-group-item">
+                                        <div class="ml-4">
+                                            <input class="form-check-input" id="@episode.EpisodeId" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
+                                            <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a> - @item.Titulo </label>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <h5>Finalizada</h5>
-            </div>
-            <div class="row mb-2">
-                <div class="col-12" style="margin:0 auto">
-                    @if (seriesFinalizada == null)
-                    {
-                        <p><em>Carregando...</em></p>
-                    }
-                    else if (seriesFinalizada.Count == 0)
-                    {
-                        <p><em>Nenhuma série marcada como assistindo</em></p>
-                    }
-                    else
-                    {
-                        <ul class="list-group">
-                            @foreach (var finalizada in seriesFinalizada)
-                            {
-                                <li class="list-group-item" id="@finalizada.SerieId">
-                                    <a href="/seriescatalog/series/@finalizada.SerieId">@finalizada.Titulo</a>
-                                </li>
-                            }
-                        </ul>
-                    }
+                <div class="row mt-3">
+                    <h5>Assistindo</h5>
                 </div>
-            </div>
-            <div class="row mt-3">
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (seriesAssistindo == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (seriesAssistindo.Count == 0)
+                        {
+                            <p><em>Nenhuma série marcada como assistindo</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var assistindo in seriesAssistindo)
+                                {
+                                    <li class="list-group-item" id="@assistindo.SerieId">
+                                        <a href="/seriescatalog/series/@assistindo.SerieId">@assistindo.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <h5>Finalizada</h5>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (seriesFinalizada == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (seriesFinalizada.Count == 0)
+                        {
+                            <p><em>Nenhuma série marcada como assistindo</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var finalizada in seriesFinalizada)
+                                {
+                                    <li class="list-group-item" id="@finalizada.SerieId">
+                                        <a href="/seriescatalog/series/@finalizada.SerieId">@finalizada.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="row mt-3">
                 <h5>Quero Assistir</h5>
             </div>
             <div class="row mb-2">
@@ -169,6 +177,62 @@
                     }
                 </div>
             </div>
+            }
+            else
+            {
+                <div class="row mt-3">
+                    <h5>Assistidos</h5>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (FilmesVistos == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (FilmesVistos.Count == 0)
+                        {
+                            <p><em>Nenhum filme marcado como assistindo</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var visto in FilmesVistos)
+                                {
+                                    <li class="list-group-item" id="@visto.FilmId">
+                                        <a href="/filmcatalog/films/@visto.FilmId">@visto.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <h5>Favoritados</h5>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (filmesfavoritados == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (filmesfavoritados.Count == 0)
+                        {
+                            <p><em>Nenhum filme marcado como Favorito</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var favoritado in filmesfavoritados)
+                                {
+                                    <li class="list-group-item" id="@favoritado.FilmId">
+                                        <a href="/seriescatalog/films/@favoritado.FilmId">@favoritado.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -187,11 +251,15 @@
     private string qtdFilmes { get; set; }
     private string qtdComentarioFilmes { get; set; }
     private SerieLibrary sl = new();
+    private FilmLibrary fl = new();
     private List<Episode> episodes = new();
     private List<Serie> seriesAssistindo = new();
     private List<Serie> seriesFinalizada = new();
     private List<Serie> seriesQueroVer = new();
     private List<Serie> seriesAbandonada = new();
+    private List<Film> FilmesVistos = new();
+    private List<Film> filmesfavoritados = new();
+    private string tipoSelecionado { get; set; } = "Serie";
 
     bool teste { get; set; }
 
@@ -205,11 +273,13 @@
         await carregarSeriesFinalizada();
         await carregarSeriesQueroVer();
         await carregarSeriesAbandonada();
+        await carregarFilmesVistos();
+        await carregarFilmesFavoritados();
     }
 
     private async Task loadFilmEstatistica()
     {
-        FilmLibrary fl = await http.GetFromJsonAsync<FilmLibrary>($"api/FilmLibraries/{user.Id}");
+        fl = await http.GetFromJsonAsync<FilmLibrary>($"api/FilmLibraries/{user.Id}");
 
         if (fl.FilmLibraryId == 0 && fl.UserId != user.Id)
         {
@@ -286,19 +356,22 @@
         foreach (var eplibvar in eplibload)
         {
             var listEOL = await http.GetFromJsonAsync<List<EpisodeOnLibrary>>($"api/EpisodeOnLibraries/GetEpisodesBySeriesChecked/{eplibvar.EpisodeLibraryId}");
-            Episode serie = await http.GetFromJsonAsync<Episode>($"api/Episodes/{listEOL[0].EpisodeId}");
-
-            List<Episode> TodosEpisodios = await http.GetFromJsonAsync<List<Episode>>($"api/Episodes/serie/{serie.SerieId}");
-
-            foreach (var visto in listEOL)
+            if (listEOL.Count > 0)
             {
-                var item = TodosEpisodios.Find(i => i.EpisodeId == visto.EpisodeId);
-                TodosEpisodios.Remove(item);
-            }
+                Episode serie = await http.GetFromJsonAsync<Episode>($"api/Episodes/{listEOL[0].EpisodeId}");
 
-            for (int i = 0; i < 2; i++)
-            {
-                episodes.Add(TodosEpisodios[i]);
+                List<Episode> TodosEpisodios = await http.GetFromJsonAsync<List<Episode>>($"api/Episodes/serie/{serie.SerieId}");
+
+                foreach (var visto in listEOL)
+                {
+                    var item = TodosEpisodios.Find(i => i.EpisodeId == visto.EpisodeId);
+                    TodosEpisodios.Remove(item);
+                }
+
+                if (TodosEpisodios.Count > 0)
+                {
+                    episodes.Add(TodosEpisodios[0]);
+                }
             }
 
         }
@@ -334,7 +407,7 @@
     {
         var seriesStatusAssistindo = await http.GetFromJsonAsync<List<SerieOnLibrary>>($"api/SerieOnLibraries/getSerieOnLibraryWithASL/{sl.SerieLibraryId}/status/{1}");
 
-        foreach(var assistindo in seriesStatusAssistindo)
+        foreach (var assistindo in seriesStatusAssistindo)
         {
             var response = await http.GetFromJsonAsync<Serie>($"api/Series/{assistindo.SerieId}");
             seriesAssistindo.Add(response);
@@ -371,6 +444,42 @@
         {
             var response = await http.GetFromJsonAsync<Serie>($"api/Series/{abandonado.SerieId}");
             seriesAbandonada.Add(response);
+        }
+    }
+
+    private void mudarDados(ChangeEventArgs e)
+    {
+        if (e.Value.Equals("Filme"))
+        {
+            tipoSelecionado = "Filme";
+        }
+        else
+        {
+            tipoSelecionado = "Serie";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task carregarFilmesVistos()
+    {
+        var rfilmesVistos = await http.GetFromJsonAsync<List<FilmsOnLibrary>>($"api/FilmsOnLibraries/GetFOLWithFL/{fl.FilmLibraryId}");
+
+        foreach (var view in rfilmesVistos)
+        {
+            var response = await http.GetFromJsonAsync<Film>($"api/Films/{view.FilmId}");
+            FilmesVistos.Add(response);
+        }
+    }
+
+    private async Task carregarFilmesFavoritados()
+    {
+        var rfilmesFavoritados = await http.GetFromJsonAsync<List<FilmsOnLibrary>>($"api/FilmsOnLibraries/GetFilmsOnLibrariesByFLFave/{fl.FilmLibraryId}");
+
+        foreach (var favoritado in rfilmesFavoritados)
+        {
+            var response = await http.GetFromJsonAsync<Film>($"api/Films/{favoritado.FilmId}");
+            filmesfavoritados.Add(response);
         }
     }
 
