@@ -1,93 +1,98 @@
 ﻿@page "/filmcatalog/films/{filmid:int}"
 @inject HttpClient http
 @using System.Text.Json
+@attribute [Authorize]
 
-<div>
-	<a href="/filmcatalog" class="btn btn-link">Voltar</a>
-</div>
-<div class="container">
-	<div class="row">
+<AuthorizeView>
+    <Authorized>
+        <div>
+            <a href="/filmcatalog" class="btn btn-link">Voltar</a>
+        </div>
+        <div class="container">
+            <div class="row">
 
-		<div class="col-4 ">
-			<img src="@film.Poster" style="max-width: 100%;" alt="Alternate Text" />
-		</div>
-		<div class="col-8">
-			<div>
-				<h2>@film.Titulo</h2>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">Diretor:</span> @film.Diretor
-				</p>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">Data de Estréia:</span> @film.DataEstreia.ToString("d")
-				</p>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">Gênero:</span> @film.Genero
-				</p>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">Duração:</span> @film.Duracao min
-				</p>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">País de origem:</span> @film.Pais
-				</p>
-			</div>
-			<div>
-				<p>
-					<span style="font-weight: bold">Sinopse:</span> @film.Sinopse
-				</p>
-			</div>
-			<div class="row">
-				<button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
-					@check_button  <span class="oi oi-check"></span>
-				</button>
-				<button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
-					@fave_button <span class="oi oi-heart"></span>
-				</button>
-				<div>
-					<label for="selectNota">Avalie:</label>
-                    <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
-                        @foreach (var nota in notas)
-                         {
-                        <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
-                         }
-                    </select>
-				</div>
-			</div>
-		</div>
-	</div>
-    <div class="row mt-5 mb-2" >
-        <div class="input-group mb-3 col-8" style="margin: 0 auto">
-            <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
-            <div class="input-group-append">
-                <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
+                <div class="col-4 ">
+                    <img src="@film.Poster" style="max-width: 100%;" alt="Alternate Text" />
+                </div>
+                <div class="col-8">
+                    <div>
+                        <h2>@film.Titulo</h2>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">Diretor:</span> @film.Diretor
+                        </p>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">Data de Estréia:</span> @film.DataEstreia.ToString("d")
+                        </p>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">Gênero:</span> @film.Genero
+                        </p>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">Duração:</span> @film.Duracao min
+                        </p>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">País de origem:</span> @film.Pais
+                        </p>
+                    </div>
+                    <div>
+                        <p>
+                            <span style="font-weight: bold">Sinopse:</span> @film.Sinopse
+                        </p>
+                    </div>
+                    <div class="row">
+                        <button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
+                            @check_button  <span class="oi oi-check"></span>
+                        </button>
+                        <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
+                            @fave_button <span class="oi oi-heart"></span>
+                        </button>
+                        <div>
+                            <label for="selectNota">Avalie:</label>
+                            <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
+                                @foreach (var nota in notas)
+                                {
+                                    <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-5 mb-2">
+                <div class="input-group mb-3 col-8" style="margin: 0 auto">
+                    <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-8" style="margin: 0 auto">
+                    @foreach (var comentario in filmComments)
+                    {
+                        @if (user.Id == comentario.ApplicationUserId)
+                        {
+                            <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
+                        }
+                        else
+                        {
+                            <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
+                        }
+                    }
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-8" style="margin: 0 auto">
-            @foreach (var comentario in filmComments)
-            {
-                @if (user.Id == comentario.ApplicationUserId)
-                {
-                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
-                }
-                else
-                {
-                    <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.FilmCommentId" OnClick="deletaComentario" />
-                }
-            }
-        </div>
-    </div>
-</div>
+    </Authorized>
+</AuthorizeView>
 
 @code {
     [Parameter] public int filmid { get; set; }

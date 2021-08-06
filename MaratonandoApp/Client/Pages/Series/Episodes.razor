@@ -1,59 +1,66 @@
 ﻿@page "/seriescatalog/series/episodio/{epid:int}"
 @inject HttpClient http
-    <div>
-        <a href="/seriescatalog/series/@serie.SerieId" class="btn btn-link">Voltar</a>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-4">
-                <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
-            </div>
-            <div class="col-8">
-                <div>
-                    <h2>@serie.Titulo - @episodio.titulo</h2>
-                    <p><span style="font-weight: bold">Episódio:</span> @episodio.nroEpisode</p>
-                    <p><span style="font-weight: bold">Temporada:</span> @episodio.nroTemporada</p>
-                    <p><span style="font-weight: bold">Sinopse:</span> @episodio.sinopse.</p>
+@attribute [Authorize]
+
+<AuthorizeView>
+    <Authorized>
+        <div>
+            <a href="/seriescatalog/series/@serie.SerieId" class="btn btn-link">Voltar</a>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-4">
+                    <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
                 </div>
-                <div class="row">
-                    <button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
-                        @check_button  <span class="oi oi-check"></span>
-                    </button>
+                <div class="col-8">
                     <div>
-                        <label for="selectNota">Avalie:</label>
-                        <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
-                            @foreach (var nota in notas)
-                            {
-                                <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
-                            }
-                        </select>
+                        <h2>@serie.Titulo - @episodio.titulo</h2>
+                        <p><span style="font-weight: bold">Episódio:</span> @episodio.nroEpisode</p>
+                        <p><span style="font-weight: bold">Temporada:</span> @episodio.nroTemporada</p>
+                        <p><span style="font-weight: bold">Sinopse:</span> @episodio.sinopse.</p>
+                    </div>
+                    <div class="row">
+                        <button class="btn btn-primary mr-3" @onclick="marcarComoVisto">
+                            @check_button  <span class="oi oi-check"></span>
+                        </button>
+                        <div>
+                            <label for="selectNota">Avalie:</label>
+                            <select id="selectNota" class="btn btn-primary" @onchange="avaliarFilme">
+                                @foreach (var nota in notas)
+                                {
+                                    <option value="@nota" selected="@(@filmrate == nota)">@nota</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row mt-5 mb-2">
-            <div class="input-group mb-3 col-8" style="margin: 0 auto">
-                <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
+            <div class="row mt-5 mb-2">
+                <div class="input-group mb-3 col-8" style="margin: 0 auto">
+                    <textarea @bind="novoComentario" class="form-control" placeholder="Digite o filme..." aria-label="Escreva um comentário..." aria-describedby="button-addon2"></textarea>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" @onclick="salvarComentario" type="button" id="button-addon2">Comentar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-8" style="margin: 0 auto">
+                    @foreach (var comentario in episodeComments)
+                    {
+                        @if (user.Id == comentario.ApplicationUserId)
+                        {
+                            <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
+                        }
+                        else
+                        {
+                            <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
+                        }}
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-8" style="margin: 0 auto">
-                @foreach (var comentario in episodeComments)
-                {
-                    @if (user.Id == comentario.ApplicationUserId)
-                    {
-                        <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="true" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
-                    }
-                    else
-                    {
-                        <Comentario Autor="@comentario.CreatedBy" Comment="@comentario.Comment" CriadoEm="@comentario.CreatedAt" Excluir="false" idComentario="@comentario.EpisodeCommentId" OnClick="deletaComentario" />
-                    }}
-            </div>
-        </div>
-    </div>
+    </Authorized>
+</AuthorizeView>
+
 @code {
     [Parameter] public int epid { get; set; }
     private ApplicationUser user { get; set; }

@@ -1,48 +1,53 @@
 ﻿@page "/seriescatalog"
 @inject HttpClient http
 @using System.Text.Json
+@attribute [Authorize]
 
-<h3 class="mb-5">Catalogo de Series</h3>
+<AuthorizeView>
+    <Authorized>
+        <h3 class="mb-5">Catalogo de Series</h3>
 
-@if (Series == null)
-{
-    <p><em>Carregando...</em></p>
-}
-else if (Series.Count == 0)
-{
-    <p><em>Não existem series cadatradas...</em></p>
-}
-else
-{
+        @if (Series == null)
+        {
+            <p><em>Carregando...</em></p>
+        }
+        else if (Series.Count == 0)
+        {
+            <p><em>Não existem series cadatradas...</em></p>
+        }
+        else
+        {
 
-    <div class="container">
-        <div class="row">
-            <div class="input-group mb-3 col-8" style="margin: 0 auto">
-                <input type="text" @bind="tituloSerie" class="form-control" placeholder="Digite o serie..." aria-label="Recipient's username" aria-describedby="button-addon2">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" @onclick="PesquisarSerie" type="button" id="button-addon2">Pesquisar</button>
-                    <button class="btn btn-outline-secondary" @onclick="LimparPesquisa" type="button">x</button>
-                </div>
-            </div>
-        </div>
-        <div class="row mb-5">
-            @foreach (var serie in Series)
-            {
-                <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
-                    <div class="card h-100">
-                        <a href="/seriescatalog/series/@serie.SerieId" class="card-link">
-                            <img class="card-img" src="@serie.Poster" alt="Poster do filme" />
-                        </a>
+            <div class="container">
+                <div class="row">
+                    <div class="input-group mb-3 col-8" style="margin: 0 auto">
+                        <input type="text" @bind="tituloSerie" class="form-control" placeholder="Digite o serie..." aria-label="Recipient's username" aria-describedby="button-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" @onclick="PesquisarSerie" type="button" id="button-addon2">Pesquisar</button>
+                            <button class="btn btn-outline-secondary" @onclick="LimparPesquisa" type="button">x</button>
+                        </div>
                     </div>
                 </div>
-            }
-        </div>
+                <div class="row mb-5">
+                    @foreach (var serie in Series)
+                    {
+                        <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
+                            <div class="card h-100">
+                                <a href="/seriescatalog/series/@serie.SerieId" class="card-link">
+                                    <img class="card-img" src="@serie.Poster" alt="Poster do filme" />
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
 
-        <Paginacao quantidadeTotalPaginas="QuantidadeTotalPaginas" paginaAtual="paginaAtual"
-                   Raio="2" PaginaSelecionada="PaginaSelecionada">
-        </Paginacao>
-    </div>
-}
+                <Paginacao quantidadeTotalPaginas="QuantidadeTotalPaginas" paginaAtual="paginaAtual"
+                           Raio="2" PaginaSelecionada="PaginaSelecionada">
+                </Paginacao>
+            </div>
+        }
+    </Authorized>
+</AuthorizeView>
 
 @code {
     List<Serie> Series { get; set; }
@@ -96,5 +101,5 @@ else
                 await LimparPesquisa();
             }
         }
-}
+    }
 }

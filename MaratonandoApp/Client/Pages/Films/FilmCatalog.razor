@@ -1,48 +1,53 @@
 ﻿@page "/filmcatalog"
 @inject HttpClient http
 @using System.Text.Json
+@attribute [Authorize]
 
-<h3 class="mb-5">Catalogo de Filmes</h3>
+<AuthorizeView>
+    <Authorized>
+        <h3 class="mb-5">Catalogo de Filmes</h3>
 
-@if (films == null)
-{
-    <p><em>Carregando...</em></p>
-}
-else if (films.Count == 0)
-{
-    <p><em>Não existem filmes cadatrados...</em></p>
-}
-else
-{
-    
-<div class="container">
-    <div class="row">
-        <div class="input-group mb-3 col-8" style="margin: 0 auto">
-            <input type="text" @bind="tituloFilme" class="form-control" placeholder="Digite o filme..." aria-label="Recipient's username" aria-describedby="button-addon2">
-            <div class="input-group-append">
-                <button class="btn btn-outline-secondary" @onclick="PesquisarFilme" type="button" id="button-addon2">Pesquisar</button>
-                <button class="btn btn-outline-secondary" @onclick="LimparPesquisa" type="button">x</button>
-            </div>
-        </div>
-    </div>
-    <div class="row mb-5">
-        @foreach (var film in films)
+        @if (films == null)
         {
-            <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
-                <div class="card h-100">
-                    <a href="/filmcatalog/films/@film.FilmId" class="card-link">
-                        <img class="card-img" src="@film.Poster" alt="Poster do filme" />
-                    </a>
+            <p><em>Carregando...</em></p>
+        }
+        else if (films.Count == 0)
+        {
+            <p><em>Não existem filmes cadatrados...</em></p>
+        }
+        else
+        {
+
+            <div class="container">
+                <div class="row">
+                    <div class="input-group mb-3 col-8" style="margin: 0 auto">
+                        <input type="text" @bind="tituloFilme" class="form-control" placeholder="Digite o filme..." aria-label="Recipient's username" aria-describedby="button-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" @onclick="PesquisarFilme" type="button" id="button-addon2">Pesquisar</button>
+                            <button class="btn btn-outline-secondary" @onclick="LimparPesquisa" type="button">x</button>
+                        </div>
+                    </div>
                 </div>
+                <div class="row mb-5">
+                    @foreach (var film in films)
+                    {
+                        <div class="col-6 col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 15px">
+                            <div class="card h-100">
+                                <a href="/filmcatalog/films/@film.FilmId" class="card-link">
+                                    <img class="card-img" src="@film.Poster" alt="Poster do filme" />
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <Paginacao quantidadeTotalPaginas="QuantidadeTotalPaginas" paginaAtual="paginaAtual"
+                           Raio="2" PaginaSelecionada="PaginaSelecionada">
+                </Paginacao>
             </div>
         }
-    </div>
-
-    <Paginacao quantidadeTotalPaginas="QuantidadeTotalPaginas" paginaAtual="paginaAtual"
-               Raio="2" PaginaSelecionada="PaginaSelecionada">
-        </Paginacao>
-</div>
-}
+    </Authorized>
+</AuthorizeView>
 
 @code
 {
@@ -91,7 +96,8 @@ else
                 {
                     PropertyNameCaseInsensitive = true
                 });
-            }else
+            }
+            else
             {
                 await LimparPesquisa();
             }

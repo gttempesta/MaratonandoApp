@@ -1,77 +1,82 @@
 ﻿@page "/seriescatalog/series/{serieid:int}"
 @inject HttpClient http
+@attribute [Authorize]
 
-<div>
-    <a href="/seriescatalog" class="btn btn-link">Voltar</a>
-</div>
-<div class="container">
-    <div class="row">
-        <div class="col-4">
-            <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
+<AuthorizeView>
+    <Authorized>
+        <div>
+            <a href="/seriescatalog" class="btn btn-link">Voltar</a>
         </div>
-        <div class="col-8">
-            <div>
-                <h2>@serie.Titulo</h2>
-                <p><span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToShortDateString()</p>
-                <p><span style="font-weight: bold">Gênero:</span> @serie.Genero</p>
-                <p><span style="font-weight: bold">País de Origem:</span> @serie.Pais</p>
-                <p><span style="font-weight: bold">Sinopse:</span> @serie.Sinopse</p>
-            </div>
+        <div class="container">
             <div class="row">
-                <div>
-                    <label for="selectStatus">Status:</label>
-                    <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarStatus">
-                        @foreach (var status in statusSeries)
+                <div class="col-4">
+                    <img src="@serie.Poster" alt="Poster de " style="max-width: 100%;" />
+                </div>
+                <div class="col-8">
+                    <div>
+                        <h2>@serie.Titulo</h2>
+                        <p><span style="font-weight: bold">Data de Estréia:</span> @serie.DataEstreia.ToShortDateString()</p>
+                        <p><span style="font-weight: bold">Gênero:</span> @serie.Genero</p>
+                        <p><span style="font-weight: bold">País de Origem:</span> @serie.Pais</p>
+                        <p><span style="font-weight: bold">Sinopse:</span> @serie.Sinopse</p>
+                    </div>
+                    <div class="row">
+                        <div>
+                            <label for="selectStatus">Status:</label>
+                            <select id="selectStatus" class="btn btn-primary mr-3" @onchange="mudarStatus">
+                                @foreach (var status in statusSeries)
+                                {
+                                    <option value="@status.Key" selected="@(statusAtual == status.Key)">@status.Value</option>
+                                }
+                            </select>
+                        </div>
+                        <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
+                            @fave_button <span class="oi oi-heart"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-8" style="margin: 0 auto">
+                    <select id="selectStatus" class="btn btn-primary mr-3 browser-default custom-select" @onchange="mudarTemporada">
+                        @foreach (var temporada in nroTemporadas)
                         {
-                            <option value="@status.Key" selected="@(statusAtual == status.Key)">@status.Value</option>
+                            <option value="@temporada" selected="@(@tempSel == temporada)">Temporada @temporada</option>
                         }
                     </select>
                 </div>
-                <button class="btn btn-primary mr-3" @onclick="marcarComoFavorito">
-                    @fave_button <span class="oi oi-heart"></span>
-                </button>
+            </div>
+            <div class="row mt-3 mb-5">
+                <div class="col-8" style="margin: 0 auto">
+                    @if (episodes == null)
+                    {
+                        <p><em>Carregando...</em></p>
+                    }
+                    else if (episodes.Count == 0)
+                    {
+                        <p><em>Sem episódios cadastrados...</em></p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var episode in episodes)
+                            {
+                                marcado = verificaMarcacao(episode);
+                                <li class="list-group-item">
+                                    <div class="ml-4">
+                                        <input class="form-check-input" id="@episode.EpisodeId" checked="@marcado" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
+                                        <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a></label>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col-8" style="margin: 0 auto">
-            <select id="selectStatus" class="btn btn-primary mr-3 browser-default custom-select" @onchange="mudarTemporada">
-                @foreach (var temporada in nroTemporadas)
-                {
-                    <option value="@temporada" selected="@(@tempSel == temporada)">Temporada @temporada</option>
-                }
-            </select>
-        </div>
-    </div>
-    <div class="row mt-3 mb-5">
-        <div class="col-8" style="margin: 0 auto">
-            @if (episodes == null)
-            {
-                <p><em>Carregando...</em></p>
-            }
-            else if (episodes.Count == 0)
-            {
-                <p><em>Sem episódios cadastrados...</em></p>
-            }
-            else
-            {
-                <ul class="list-group">
-                    @foreach (var episode in episodes)
-                    {
-                        marcado = verificaMarcacao(episode);
-                    <li class="list-group-item">
-                        <div class="ml-4">
-                            <input class="form-check-input" id="@episode.EpisodeId" checked="@marcado" type="checkbox" value="@episode.EpisodeId" aria-label="..." @onchange="async eventArgs => { checkBoxClicado(episode, eventArgs.Value); }">
-                            <label class="form-check-label" for="@episode.EpisodeId">@episode.nroEpisode) <a href="/seriescatalog/series/episodio/@episode.EpisodeId">@episode.titulo</a></label>
-                        </div>
-                    </li>
-                    }
-                </ul>
-            }
-
-        </div>
-    </div>
-</div>
+    </Authorized>
+</AuthorizeView>
 
 @code{
 
