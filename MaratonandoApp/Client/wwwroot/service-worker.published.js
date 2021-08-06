@@ -8,7 +8,6 @@ self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const cacheNameHttpGet = 'cache-HttpGet';
 const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/];
 const offlineAssetsExclude = [/^service-worker\.js$/];
 
@@ -38,75 +37,18 @@ async function onActivate(event) {
 }
 
 async function onFetch(event) {
-    //let cachedResponse = null;
-    //if (event.request.method === 'GET') {
-    //    // For all navigation requests, try to serve index.html from cache
-    //    // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
-    //    const shouldServeIndexHtml = event.request.mode === 'navigate'
-    //        && !event.request.url.includes('/connect/')
-    //        && !event.request.url.includes('/Identity/');
-
-    //    const request = shouldServeIndexHtml ? 'index.html' : event.request;
-    //    const cache = await caches.open(cacheName);
-    //    cachedResponse = await cache.match(request);
-    //}
-
-    //return cachedResponse || fetch(event.request);
-
-    //se o request não for um get -> continua
-    if (event.request.method != 'GET') {
-        return fetch(event.request);
-    }
-
-    //verifico se estou navegando (html) 
     let cachedResponse = null;
-    const shouldServeIndexHtml = event.request.mode === 'navigate';
+    if (event.request.method === 'GET') {
+        // For all navigation requests, try to serve index.html from cache
+        // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
+        const shouldServeIndexHtml = event.request.mode === 'navigate'
+            && !event.request.url.includes('/connect/')
+            && !event.request.url.includes('/Identity/');
 
-    //se estou navegando o request trata o index.html
-    const request = shouldServeIndexHtml ? 'index.html' : event.request;
-
-    //abre o cache offline e apresenta o conteudo
-    const cache = await caches.open(cacheName);
-    cachedResponse = await cache.match(request);
-
-    //se ha dados no cache retorna
-    if (cachedResponse) {
-        return cachedResponse;
+        const request = shouldServeIndexHtml ? 'index.html' : event.request;
+        const cache = await caches.open(cacheName);
+        cachedResponse = await cache.match(request);
     }
 
-    //não há dados no cache então é um request GET
-    //neste caso vai criar/obter os dados do cache httpget
-    var response = await ObterDadosCacheHttpGet(event);
-
-    return response;
-}
-
-async function ObterDadosCacheHttpGet(event) {
-
-    try {
-        //obtenho a resposta GET
-        const response = await fetch(event.request);
-
-        //verifico o header da resposta
-        const contentType = response.headers.get('content-type');
-
-        let salvarNoCache = true;
-
-        //se for html não salva no cache
-        if (contentType) {
-            salvarNoCache = !contentType.includes('text/html');
-        }
-
-        //abre/cria o cache e salva um clone do response no cache
-        if (salvarNoCache) {
-            const cache = await caches.open(cacheNameHttpGet);
-            await cache.put(event.request, response.clone());
-        }
-        return response;
-    }
-    catch {
-        //sem conexao guarda o estado mais recente do cache criado
-        const cache = await caches.open(cacheNameHttpGet);
-        return cache.match(event.request);
-    }
+    return cachedResponse || fetch(event.request);
 }
