@@ -2,6 +2,7 @@
 @inject HttpClient http
 @inject IJSRuntime js
 @inject NavigationManager navigationManager
+@inject AppState appstate
 @attribute [Authorize]
 
 <AuthorizeView>
@@ -412,6 +413,7 @@
             if (ex.GetType().ToString().Equals("System.Net.Http.HttpRequestException"))
             {
                 await js.GuardarEpisodioParaMarcar(ep.EpisodeId);
+                await appstate.NotificarAtualizarSincronizacoesEmEspera();
             }
             else
             {

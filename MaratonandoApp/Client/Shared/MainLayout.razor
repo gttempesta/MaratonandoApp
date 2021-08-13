@@ -3,7 +3,11 @@
 <div class="page">
     <div class="sidebar" style="display:flex; flex-direction:column; justify-content: space-between;">
         <NavMenu />
-        <Sincronizador />
+        <AuthorizeView>
+            <Authorized>
+                <Sincronizador />
+            </Authorized>
+        </AuthorizeView>
     </div>
 
     <div class="main">

@@ -1,3 +1,4 @@
+using MaratonandoApp.Client.Helpers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -26,6 +27,8 @@ namespace MaratonandoApp.Client
             builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("MaratonandoApp.ServerAPI"));
 
             builder.Services.AddApiAuthorization();
+
+            builder.Services.AddSingleton<AppState>();
 
             await builder.Build().RunAsync();
         }

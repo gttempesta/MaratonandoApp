@@ -1,5 +1,6 @@
 ﻿@inject IJSRuntime js
 @inject HttpClient http
+@inject AppState appstate 
 
 <div>
     <div style="color:white; margin-bottom:1em; border-top:1px solid white;">
@@ -33,6 +34,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        appstate.OnAtualizarSincronizacoesEmEspera += AtualizarSincronacoesEmEspera;
         await sincronizar();
     }
 
@@ -71,6 +73,7 @@
             }
 
             deuErro = false;
+            emEspera = 0;
 
         }catch(Exception ex)
         {
