@@ -1,5 +1,7 @@
 ﻿@page "/biblioteca"
 @inject HttpClient http
+@inject IJSRuntime js
+@inject NavigationManager navigationManager
 @attribute [Authorize]
 
 <AuthorizeView>
@@ -126,57 +128,57 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                <h5>Quero Assistir</h5>
-            </div>
-            <div class="row mb-2">
-                <div class="col-12" style="margin:0 auto">
-                    @if (seriesQueroVer == null)
-                    {
-                        <p><em>Carregando...</em></p>
-                    }
-                    else if (seriesQueroVer.Count == 0)
-                    {
-                        <p><em>Nenhuma série marcada como assistindo</em></p>
-                    }
-                    else
-                    {
-                        <ul class="list-group">
-                            @foreach (var querover in seriesQueroVer)
-                            {
-                                <li class="list-group-item" id="@querover.SerieId">
-                                    <a href="/seriescatalog/series/@querover.SerieId">@querover.Titulo</a>
-                                </li>
-                            }
-                        </ul>
-                    }
+                    <h5>Quero Assistir</h5>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <h5>Abandonei</h5>
-            </div>
-            <div class="row mb-2">
-                <div class="col-12" style="margin:0 auto">
-                    @if (seriesAbandonada == null)
-                    {
-                        <p><em>Carregando...</em></p>
-                    }
-                    else if (seriesAbandonada.Count == 0)
-                    {
-                        <p><em>Nenhuma série marcada como assistindo</em></p>
-                    }
-                    else
-                    {
-                        <ul class="list-group">
-                            @foreach (var abandonada in seriesAbandonada)
-                            {
-                                <li class="list-group-item" id="@abandonada.SerieId">
-                                    <a href="/seriescatalog/series/@abandonada.SerieId">@abandonada.Titulo</a>
-                                </li>
-                            }
-                        </ul>
-                    }
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (seriesQueroVer == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (seriesQueroVer.Count == 0)
+                        {
+                            <p><em>Nenhuma série marcada como assistindo</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var querover in seriesQueroVer)
+                                {
+                                    <li class="list-group-item" id="@querover.SerieId">
+                                        <a href="/seriescatalog/series/@querover.SerieId">@querover.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
                 </div>
-            </div>
+                <div class="row mt-3">
+                    <h5>Abandonei</h5>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12" style="margin:0 auto">
+                        @if (seriesAbandonada == null)
+                        {
+                            <p><em>Carregando...</em></p>
+                        }
+                        else if (seriesAbandonada.Count == 0)
+                        {
+                            <p><em>Nenhuma série marcada como assistindo</em></p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var abandonada in seriesAbandonada)
+                                {
+                                    <li class="list-group-item" id="@abandonada.SerieId">
+                                        <a href="/seriescatalog/series/@abandonada.SerieId">@abandonada.Titulo</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
             }
             else
             {
@@ -379,28 +381,43 @@
 
     private async Task checkBoxClicado(Episode ep, object checkValue)
     {
-        var addSOL = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{ep.SerieId}");
-        var addEL = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{addSOL.SerieOnLibraryId}");
-        if ((bool)checkValue)
+        try
         {
-            EpisodeOnLibrary novoEol = new();
+            var addSOL = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{ep.SerieId}");
+            var addEL = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{addSOL.SerieOnLibraryId}");
+            if ((bool)checkValue)
+            {
+                EpisodeOnLibrary novoEol = new();
 
-            novoEol.EpisodeLibraryId = addEL.EpisodeLibraryId;
-            novoEol.FlAssistido = true;
-            novoEol.NotaEpisodio = 0;
-            novoEol.EpisodeId = ep.EpisodeId;
-            novoEol.DataAssistido = DateTime.Now;
+                novoEol.EpisodeLibraryId = addEL.EpisodeLibraryId;
+                novoEol.FlAssistido = true;
+                novoEol.NotaEpisodio = 0;
+                novoEol.EpisodeId = ep.EpisodeId;
+                novoEol.DataAssistido = DateTime.Now;
 
-            var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+                var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+            }
+            else
+            {
+                var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{ep.EpisodeId}/{addEL.EpisodeLibraryId}");
+            }
+
+            episodes = new List<Episode>();
+            await carregaProxEpsParaAssistir();
+            StateHasChanged();
         }
-        else
+        catch (Exception ex)
         {
-            var response = await http.DeleteAsync($"api/EpisodeOnLibraries/{ep.EpisodeId}/{addEL.EpisodeLibraryId}");
+            var texto = ex.GetType().ToString();
+            if (ex.GetType().ToString().Equals("System.Net.Http.HttpRequestException"))
+            {
+                await js.GuardarEpisodioParaMarcar(ep.EpisodeId);
+            }
+            else
+            {
+                throw ex;
+            }
         }
-
-        episodes = new List<Episode>();
-        await carregaProxEpsParaAssistir();
-        StateHasChanged();
     }
 
     private async Task carregarSeriesAssistindo()

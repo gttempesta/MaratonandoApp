@@ -1,0 +1,104 @@
+﻿@inject IJSRuntime js
+@inject HttpClient http
+
+<div>
+    <div style="color:white; margin-bottom:1em; border-top:1px solid white;">
+        <div style="margin-left: 5px; margin-top: 5px;">
+            @if (estaSincronizando)
+            {
+                <div>Sincronizando...</div>
+            }
+            else if (deuErro)
+            {
+                <div>Erro ao sincronizar</div>
+                <button @onclick="sincronizarClick">Tentar novamente</button>
+            }
+            else
+            {
+                <div>Sincronizações em espera: @emEspera</div>
+                @if (emEspera > 0)
+                {
+                    <button @onclick="sincronizarClick">Sicronizar</button>
+                }
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    int emEspera = 0;
+    bool estaSincronizando = false;
+    bool deuErro = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await sincronizar();
+    }
+
+    private async Task sincronizarClick()
+    {
+        await sincronizar();
+    }
+
+    public async Task AtualizarSincronacoesEmEspera()
+    {
+        emEspera = await js.AtualizarSincronacoesEmEspera();
+        StateHasChanged();
+    }
+
+    private async Task sincronizar()
+    {
+        var paraSincronizar = await js.ObterEpisodiosPraSincronizar();
+
+        var esperando = paraSincronizar.ObterEmEspera();
+
+        if (esperando == 0)
+        {
+            return;
+        }
+
+        estaSincronizando = true;
+        StateHasChanged();
+
+        try
+        {
+            foreach (var episodio in paraSincronizar.EpisodiosParaMarcar)
+            {
+                var resposta = await tentarSincronizar(episodio);
+                resposta.EnsureSuccessStatusCode();
+                await js.ApagarDbBrowser("watched", episodio.Id);
+            }
+
+            deuErro = false;
+
+        }catch(Exception ex)
+        {
+            deuErro = true;
+        }
+
+        estaSincronizando = false;
+        StateHasChanged();
+    }
+
+    private async Task<HttpResponseMessage> tentarSincronizar(DadoDbLocal dado)
+    {
+        var user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
+        var sl = await http.GetFromJsonAsync<SerieLibrary>($"api/SerieLibraries/getUserLoadSerie/{user.Id}");
+        var ep = await http.GetFromJsonAsync<Episode>($"api/Episodes/{dado.idep}");
+        var sol = await http.GetFromJsonAsync<SerieOnLibrary>($"api/SerieOnLibraries/getSerieLibrary/{sl.SerieLibraryId}/{ep.SerieId}");
+        var el = await http.GetFromJsonAsync<EpisodeLibrary>($"api/EpisodeLibraries/getEpLibBySOL/{sol.SerieOnLibraryId}");
+
+        EpisodeOnLibrary novoEol = new();
+
+        novoEol.EpisodeLibraryId = el.EpisodeLibraryId;
+        novoEol.FlAssistido = true;
+        novoEol.NotaEpisodio = 0;
+        novoEol.EpisodeId = ep.EpisodeId;
+        novoEol.DataAssistido = DateTime.Now;
+
+        var response = await http.PostAsJsonAsync<EpisodeOnLibrary>("api/EpisodeOnLibraries", novoEol);
+
+        return response;
+    }
+}
