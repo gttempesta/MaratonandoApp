@@ -264,8 +264,6 @@
     private List<Film> filmesfavoritados = new();
     private string tipoSelecionado { get; set; } = "Serie";
 
-    bool teste { get; set; }
-
     protected async override Task OnInitializedAsync()
     {
         user = await http.GetFromJsonAsync<ApplicationUser>("api/account/");
